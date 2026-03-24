@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../trigger.config.ts"],
-  "sourcesContent": ["import { defineConfig } from '@trigger.dev/sdk/v3';\n// Import ffmpeg instead of just aptGet\nimport { ffmpeg, aptGet } from '@trigger.dev/build/extensions/core';\n\nexport default defineConfig({\n  project: 'proj_bzgjeuuxdfiuyqqnwlql',\n  runtime: 'node',\n  logLevel: 'log',\n  maxDuration: 300,\n  build: {},\n  dirs: ['./trigger'],\n});\nexport const resolveEnvVars = undefined;"],
-  "mappings": ";;;;;;;;;AAAA;AAIA,IAAO,yBAAQ,aAAa;AAAA,EAC1B,SAAS;AAAA,EACT,SAAS;AAAA,EACT,UAAU;AAAA,EACV,aAAa;AAAA,EACb,OAAO,CAAC;AAAA,EACR,MAAM,CAAC,WAAW;AACpB,CAAC;AACM,IAAM,iBAAiB;",
-  "names": []
-}

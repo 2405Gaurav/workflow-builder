@@ -35,6 +35,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+
+# Trigger.dev / build artifacts
+.trigger/
+*.trigger
+
 # clerk configuration (can include secrets)
 /.clerk/
 
