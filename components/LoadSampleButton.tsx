@@ -3,25 +3,25 @@
 import { Button } from '@/components/ui/button';
 import { useWorkflowStore } from '@/lib/store';
 import { sampleWorkflow } from '@/lib/sample-workflow';
-import { Workflow } from 'lucide-react';
+import { Box } from 'lucide-react'; // Changed icon to 'Box' for a more 'template/asset' feel common in Krea
 
 export function LoadSampleButton() {
   const { setNodes, setEdges, saveToHistory } = useWorkflowStore();
 
   const handleLoadSample = () => {
-    setNodes(sampleWorkflow.nodes);
-    setEdges(sampleWorkflow.edges);
+    //kreaaaaa style
+    setNodes(sampleWorkflow.nodes as any);
+    setEdges(sampleWorkflow.edges as any);
     saveToHistory();
   };
 
   return (
     <Button
-      size="sm"
-      variant="ghost"
+      variant="outline"
       onClick={handleLoadSample}
-      className="h-8 px-3 text-xs text-gray-400 hover:text-gray-200 hover:bg-white/5 gap-1.5 rounded-lg"
+      className="h-9 px-4 text-xs bg-transparent border-white/10 text-white/50 hover:bg-white/5 hover:text-white hover:border-white/20 rounded-full gap-2 transition-all duration-200 group"
     >
-      <Workflow size={14} />
+      <Box size={14} className="group-hover:text-[#eab308] transition-colors" />
       Sample
     </Button>
   );

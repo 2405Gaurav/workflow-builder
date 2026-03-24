@@ -16,8 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User message is required" }, { status: 400 });
     }
 
-    // FIX: "gemini-2.5-flash" does not exist. Use 1.5 Flash or Pro.
-    const validModel = "gemini-1.5-flash";
+    const validModel = "gemini-2.5-flash";
 
     // ==============================
     // ✅ 1. Trigger.dev (PRIMARY)
