@@ -114,7 +114,7 @@ export interface WorkflowExecution {
   scope: ExecutionScope;
   duration_ms?: number;
   node_results: Record<string, NodeExecutionResult>;
-  started_at: string;
+  startedAt: string;
   completed_at?: string;
   error_message?: string;
 }

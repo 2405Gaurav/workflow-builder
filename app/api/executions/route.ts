@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/db';
 
+// app/api/executions/route.ts
+
 export async function GET(req: NextRequest) {
   try {
     const { userId } = await auth();
@@ -14,13 +16,24 @@ export async function GET(req: NextRequest) {
         userId,
         ...(workflowId ? { workflowId } : {}),
       },
+      // ✅ Only select metadata fields
+      select: {
+        id: true,
+        workflowId: true,
+        status: true,
+        scope: true,
+        startedAt: true,
+        durationMs: true,
+        errorMessage: true,
+        // nodeResults is NOT selected here
+      },
       orderBy: { startedAt: 'desc' },
+      take: 20, 
     });
 
     return NextResponse.json({ executions: data });
   } catch (error) {
-    console.error('Get executions error:', error);
-    return NextResponse.json({ error: 'Failed to fetch executions' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed' }, { status: 500 });
   }
 }
 

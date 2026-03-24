@@ -11,8 +11,9 @@ export function HistorySidebar() {
   const { user } = useUser();
   const { executions, currentExecution, setCurrentExecution, setExecutions } = useWorkflowStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingDetail, setIsFetchingDetail] = useState<string | null>(null);
 
-  // Fetch executions from the server on mount
+  // 1. Fetch lightweight executions (metadata only)
   useEffect(() => {
     if (!user) return;
 
@@ -33,6 +34,27 @@ export function HistorySidebar() {
 
     fetchExecutions();
   }, [user, setExecutions]);
+
+  // 2. Fetch full details (heavy data) on click
+  const handleSelectExecution = async (executionId: string) => {
+    if (currentExecution?.id === executionId) {
+      setCurrentExecution(null);
+      return;
+    }
+
+    setIsFetchingDetail(executionId);
+    try {
+      const response = await fetch(`/api/executions/${executionId}`);
+      if (response.ok) {
+        const { execution: fullData } = await response.json();
+        setCurrentExecution(fullData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch execution details:', error);
+    } finally {
+      setIsFetchingDetail(null);
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -75,18 +97,14 @@ export function HistorySidebar() {
   };
 
   return (
-    <div className="w-80 flex flex-col glass animate-slide-in-right"
-      style={{
-        borderLeft: '1px solid rgba(255,255,255,0.06)',
-      }}
+    <div className="w-80 flex flex-col glass animate-slide-in-right h-full overflow-hidden"
+      style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}
     >
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2">
+      <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2 shrink-0">
         <History size={16} className="text-gray-400" />
         <h2 className="text-sm font-bold text-gray-200 tracking-wide">Execution History</h2>
       </div>
 
-      {/* Content */}
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-2">
           {isLoading ? (
@@ -96,120 +114,103 @@ export function HistorySidebar() {
             </div>
           ) : executions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.05)' }}
-              >
-                <History size={20} className="text-gray-600" />
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-gray-400">No executions yet</p>
-                <p className="text-[10px] text-gray-600 mt-1">Run your workflow to see history</p>
-              </div>
+              <History size={20} className="text-gray-600" />
+              <p className="text-xs text-gray-400">No executions yet</p>
             </div>
           ) : (
             executions.map((execution, index) => (
-              <button
+              <div
                 key={execution.id}
-                onClick={() => setCurrentExecution(
-                  currentExecution?.id === execution.id ? null : execution
-                )}
-                className={`w-full text-left rounded-xl transition-all duration-200 overflow-hidden animate-fade-in`}
-                style={{
-                  background: currentExecution?.id === execution.id
-                    ? 'rgba(124, 58, 237, 0.1)'
-                    : 'rgba(255, 255, 255, 0.03)',
-                  border: currentExecution?.id === execution.id
-                    ? '1px solid rgba(124, 58, 237, 0.3)'
-                    : '1px solid rgba(255, 255, 255, 0.06)',
-                  animationDelay: `${index * 50}ms`,
-                }}
+                className={`w-full text-left rounded-xl transition-all duration-200 overflow-hidden animate-fade-in border ${
+                  currentExecution?.id === execution.id 
+                    ? 'bg-purple-500/10 border-purple-500/30' 
+                    : 'bg-white/[0.03] border-white/[0.06]'
+                }`}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="p-3">
-                  {/* Top row */}
+                <button
+                  onClick={() => handleSelectExecution(execution.id)}
+                  className="w-full p-3 text-left"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       {getStatusIcon(execution.status)}
                       {getScopeBadge(execution.scope)}
                     </div>
                     <div className="flex items-center gap-1.5">
+                      {/* FIXED: Using snake_case duration_ms */}
                       {execution.duration_ms && (
                         <span className="text-[10px] text-gray-500 font-mono">
                           {(execution.duration_ms / 1000).toFixed(1)}s
                         </span>
                       )}
-                      <ChevronRight
-                        size={12}
-                        className={`text-gray-600 transition-transform ${
-                          currentExecution?.id === execution.id ? 'rotate-90' : ''
-                        }`}
-                      />
+                      {isFetchingDetail === execution.id ? (
+                        <Loader2 size={12} className="animate-spin text-purple-400" />
+                      ) : (
+                        <ChevronRight
+                          size={12}
+                          className={`text-gray-600 transition-transform ${
+                            currentExecution?.id === execution.id ? 'rotate-90' : ''
+                          }`}
+                        />
+                      )}
                     </div>
                   </div>
 
-                  {/* Timestamp */}
                   <div className="flex items-center gap-1 text-[10px] text-gray-500">
                     <Clock size={10} />
+                    {/*  */}
                     {formatDistanceToNow(new Date(execution.startedAt), { addSuffix: true })}
                   </div>
+                </button>
 
-                  {/* Error message */}
-                  {execution.error_message && (
-                    <div className="mt-2 flex items-start gap-1.5 text-[10px] text-red-400 bg-red-500/10 p-2 rounded-lg border border-red-500/15">
-                      <AlertCircle size={12} className="shrink-0 mt-0.5" />
-                      <span>{execution.error_message}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Expanded: Node Results */}
-                {currentExecution?.id === execution.id && execution.node_results && (
+                {currentExecution?.id === execution.id && (
                   <div className="px-3 pb-3 border-t border-white/5 pt-2 space-y-1.5">
-                    <p className="text-[9px] uppercase tracking-wider text-gray-500 font-medium mb-2">
-                      Node Results
-                    </p>
-                    {Object.entries(execution.node_results).map(([nodeId, result]) => (
-                      <div
-                        key={nodeId}
-                        className="rounded-lg p-2 transition-colors"
-                        style={{ background: getStatusColor(result.status) }}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-medium text-gray-300 truncate max-w-[140px]">
-                            {nodeId}
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[9px] text-gray-500 font-mono">
-                              {result.executionTime}ms
-                            </span>
-                            {getStatusIcon(result.status)}
-                          </div>
-                        </div>
-
-                        {/* Show outputs preview */}
-                        {result.outputs && (
-                          <div className="text-[9px] text-gray-500 truncate mt-1">
-                            {result.outputs.text && (
-                              <span>📝 {result.outputs.text.substring(0, 60)}...</span>
-                            )}
-                            {result.outputs.imageUrl && (
-                              <span>🖼️ Image output</span>
-                            )}
-                            {result.outputs.videoUrl && (
-                              <span>🎥 Video output</span>
-                            )}
-                          </div>
-                        )}
-
-                        {result.error && (
-                          <div className="text-[9px] text-red-400 mt-1 truncate">
-                            ❌ {result.error}
-                          </div>
-                        )}
+                    {/* FIXED: Using snake_case node_results */}
+                    {!currentExecution.node_results ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 size={14} className="animate-spin text-gray-600" />
                       </div>
-                    ))}
+                    ) : (
+                      <>
+                        <p className="text-[9px] uppercase tracking-wider text-gray-500 font-medium mb-2">
+                          Node Results
+                        </p>
+                        {Object.entries(currentExecution.node_results as Record<string, any>).map(([nodeId, result]) => (
+                          <div
+                            key={nodeId}
+                            className="rounded-lg p-2 transition-colors"
+                            style={{ background: getStatusColor(result.status) }}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-medium text-gray-300 truncate max-w-[140px]">
+                                {nodeId}
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[9px] text-gray-500 font-mono">
+                                  {result.executionTime}ms
+                                </span>
+                                {getStatusIcon(result.status)}
+                              </div>
+                            </div>
+
+                            {result.outputs && (
+                              <div className="text-[9px] text-gray-500 truncate mt-1">
+                                {result.outputs.text && (
+                                  // FIXED: Escaped quotes for ESLint
+                                  <span className="block italic">&quot;{result.outputs.text.substring(0, 40)}...&quot;</span>
+                                )}
+                                {result.outputs.frameUrl && <span className="block text-purple-400">🖼️ Frame Extracted</span>}
+                                {result.outputs.croppedImageUrl && <span className="block text-blue-400">✂️ Image Cropped</span>}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </>
+                    )}
                   </div>
                 )}
-              </button>
+              </div>
             ))
           )}
         </div>
