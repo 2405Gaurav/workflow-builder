@@ -1,0 +1,60 @@
+// NextFlow Prisma Schema — Neon DB (PostgreSQL)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+
+}
+
+model Workflow {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id")
+  name        String   @default("Untitled Workflow")
+  description String   @default("")
+  nodes       Json     @default("[]")
+  edges       Json     @default("[]")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  executions WorkflowExecution[]
+
+  @@index([userId])
+  @@map("workflows")
+}
+
+model WorkflowExecution {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workflowId   String?   @map("workflow_id") @db.Uuid
+  userId       String    @map("user_id")
+  status       String    @default("running")
+  scope        String    @default("full")
+  durationMs   Int?      @map("duration_ms")
+  nodeResults  Json      @default("{}") @map("node_results")
+  startedAt    DateTime  @default(now()) @map("started_at") @db.Timestamptz()
+  completedAt  DateTime? @map("completed_at") @db.Timestamptz()
+  errorMessage String?   @map("error_message")
+
+  workflow Workflow? @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([userId])
+  @@index([status])
+  @@map("workflow_executions")
+}
+
+model MediaUpload {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id")
+  fileName  String   @map("file_name")
+  mimeType  String   @map("mime_type")
+  sizeBytes Int      @map("size_bytes")
+  dataUrl   String   @map("data_url") @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([userId])
+  @@map("media_uploads")
+}

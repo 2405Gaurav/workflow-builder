@@ -1,0 +1,33 @@
+{
+  "configPath": "G:\\project\\.trigger\\tmp\\build-ecLV9V\\trigger.config.mjs",
+  "customConditions": [
+  ],
+  "queues": [
+  ],
+  "runtime": "node",
+  "runtimeVersion": "22.12.0",
+  "tasks": [
+    {
+      "entryPoint": "G:\\project\\.trigger\\tmp\\build-ecLV9V\\tasks.mjs",
+      "filePath": "trigger/tasks.ts",
+      "id": "execute-llm",
+      "maxDuration": 300
+    },
+    {
+      "entryPoint": "G:\\project\\.trigger\\tmp\\build-ecLV9V\\tasks.mjs",
+      "filePath": "trigger/tasks.ts",
+      "id": "crop-image",
+      "maxDuration": 300
+    },
+    {
+      "entryPoint": "G:\\project\\.trigger\\tmp\\build-ecLV9V\\tasks.mjs",
+      "filePath": "trigger/tasks.ts",
+      "id": "extract-frame",
+      "maxDuration": 300
+    }
+  ],
+  "timings": {
+    "trigger/tasks.ts": 2.668700000000001
+  },
+  "workerEntryPoint": "G:\\project\\.trigger\\tmp\\build-ecLV9V\\dev-run-worker.mjs"
+}

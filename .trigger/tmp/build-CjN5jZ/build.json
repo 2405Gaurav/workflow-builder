@@ -1,0 +1,114 @@
+{
+  "build": {
+  },
+  "cliPackageVersion": "4.4.3",
+  "config": {
+    "dirs": [
+      "./trigger"
+    ],
+    "project": "proj_bzgjeuuxdfiuyqqnwlql"
+  },
+  "configPath": "G:\\project\\.trigger\\tmp\\build-CjN5jZ\\trigger.config.mjs",
+  "contentHash": "c3bd2b7cb9b6167d83d13e7df189d2c2",
+  "customConditions": [
+  ],
+  "deploy": {
+    "env": {
+    }
+  },
+  "environment": "dev",
+  "externals": [
+    {
+      "name": "sharp",
+      "version": "0.34.5"
+    },
+    {
+      "name": "fluent-ffmpeg",
+      "version": "2.1.3"
+    },
+    {
+      "name": "import-in-the-middle",
+      "version": "1.11.0"
+    }
+  ],
+  "files": [
+    {
+      "entry": "trigger/tasks.ts",
+      "out": "G:\\project\\.trigger\\tmp\\build-CjN5jZ\\tasks.mjs"
+    }
+  ],
+  "indexWorkerEntryPoint": "G:\\project\\.trigger\\tmp\\build-CjN5jZ\\dev-index-worker.mjs",
+  "otelImportHook": {
+    "include": [
+    ]
+  },
+  "outputHashes": {
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-7O3HWOEK.mjs": "TrmGnukJUQc",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-7O3HWOEK.mjs.map": "SLCTMJtOKG0",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-ESA3WE7J.mjs": "G9ivWuByTf8",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-ESA3WE7J.mjs.map": "a6069M4fXxk",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-GOSPV2DU.mjs": "CCYXHq5p29g",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-GOSPV2DU.mjs.map": "ez5wSxLCqL4",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-L5PG3NFO.mjs": "Uvvp4KfSg90",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-L5PG3NFO.mjs.map": "89jy+i6uzrA",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-MYVM6YOC.mjs": "j2tfNfZ6bVI",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-MYVM6YOC.mjs.map": "3fJ0TRQaQfM",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-Q63KMMEI.mjs": "WzM1BTHnFV8",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-Q63KMMEI.mjs.map": "LMPzUuAiOIM",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-QRLDSXRP.mjs": "cbu19TUv4ys",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\chunk-QRLDSXRP.mjs.map": "z3Vwri5Zx0Q",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\crypto.node-A3GN57P6.mjs": "lhlyq8pQCuY",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\crypto.node-A3GN57P6.mjs.map": "0b4tlwmkM3g",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\crypto.node-LEBUJDWK.mjs": "APXWNl61+J0",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\crypto.node-LEBUJDWK.mjs.map": "iNMQfT9yvfQ",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\dev-index-worker.mjs": "x4LvQz2Wx1s",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\dev-index-worker.mjs.map": "dvMTOHgDljM",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\dev-run-worker.mjs": "/YHFgvZbvkk",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\dev-run-worker.mjs.map": "v7YU8BuyKSo",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\dist-PY5SJJEZ.mjs": "UV0gElcxEMs",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\dist-PY5SJJEZ.mjs.map": "iE9vZceT/pk",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\esm-EWRWHLRM.mjs": "06Y2mFck5XY",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\esm-EWRWHLRM.mjs.map": "kq+YRlIBk84",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\esm-JPU3D6KX.mjs": "6NI8zEwrsWQ",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\esm-JPU3D6KX.mjs.map": "VON93E1In1A",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\getMachineId-bsd-PDPOWJTN.mjs": "MiMaZDIkYjI",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\getMachineId-bsd-PDPOWJTN.mjs.map": "pAiBDgul0w8",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\getMachineId-darwin-UIT2JO4U.mjs": "2fUjaoV1Wv8",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\getMachineId-darwin-UIT2JO4U.mjs.map": "8GDMPtB7WY8",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\getMachineId-linux-E5XVF63X.mjs": "vucV4rsVHfs",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\getMachineId-linux-E5XVF63X.mjs.map": "gdzmkd0YUFY",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\getMachineId-unsupported-NA72F2IN.mjs": "KQzxZrToilY",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\getMachineId-unsupported-NA72F2IN.mjs.map": "0iC5J6VD3bg",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\getMachineId-win-VI6G4KCJ.mjs": "wydQakQWBNM",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\getMachineId-win-VI6G4KCJ.mjs.map": "TFZ4Lk3ghLo",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\s2s-SBZQKQUA.mjs": "7xghL5DV9Qc",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\s2s-SBZQKQUA.mjs.map": "+8NRCvpH4hg",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\tasks.mjs": "22glzAFDmmw",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\tasks.mjs.map": "PaWch0aryEQ",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\trigger.config.mjs": "7IZSS9hxUYY",
+    "G:\\project\\.trigger\\tmp\\build-ecLV9V\\trigger.config.mjs.map": "JD3bnBuhG/s"
+  },
+  "outputPath": "G:\\project\\.trigger\\tmp\\build-CjN5jZ",
+  "packageVersion": "4.4.3",
+  "runWorkerEntryPoint": "G:\\project\\.trigger\\tmp\\build-CjN5jZ\\dev-run-worker.mjs",
+  "runtime": "node",
+  "sources": {
+    "package.json": {
+      "contentHash": "4eecf44ea7788180714f27ee0bf96a77",
+      "contents": "eJyNVsuS4joM3fdXpFiPnYR3z+ou7vxGVwlbBA+O7bKVAD01/z7lJCTubhrYEZ2D3pb05yXLZgZqnP3MZgbP9DvMfkRZiz4oa6K44CUveqnzqgWKZPINdqIgvHIUZj+zPy9ZlmUzie1VWRZ//+jFu0ZpOQL91wAFAk8j1H8NkFZmQrqPAaCLQ3FAcYwoBZExZuyvWtHsJcv+dp5JdGgkGqEwce8/odEf8x2II5rOobcFn/P5VfGAD7mI8IYXfP0JpgPW2MNzvuSrzYjv97XDiikTCLRGn/eCjlqOmYzMytpKY16hQQ+kWmSgOlrB50tejryDtce99XXuMVgdCzN4/ZooM2iNBIIdBMwD+ha9xhAGs0USn0HSan/JnW4qZVgS6IqXq8RuRPJwEuwEoWbGSux55YKnNOdVqCEHCY7Qs+jIkLZV4t/AElphX9FPuAepzqxRuUcQxEAI6+XQgG8ln9+havTEpAJtpyyX37KDQ0EsJtzeqMlndgsE/jGv68SdPT+2L6zW4ILaaXxCrTWEZ2I1mmbotfn3qp9NgfTWSXsyqdo79INt0TMBXj5WrWGHelT5bVzR8C7J67f6DLSqiqVKnL3bDM666O5jzc7byk8P5I6z8dOyytvGPbYfhLdaM/AIjzUH1CjocQUCOvBA9olGDFrJMfx7fmpLT2g7KRKHxzyC3ROJJAuBRte+jZZsVT3zOHreh8LcZVtNaiJO85C8qir0XGKbB9ntkyVf8sVEuDgMeZx/EZsXfJ3+uwM7G91s3MZdchNm0tYjZdoX58te29Ok4a2c87KY0gMNWedxr859XcuCL3m5usJCQwisBa/ACGTQ0MF6RZdhkWymjHRMATSM+oInOsL5axeKuk9Gtz5GLRII2d5cV9B6QrDeaYhzwjYBNZsC2vJFwgrXlb7ly9fP8jjx9qrqltLXVbPXDRpiyUKNDo+FUsY1xCxNz3Q5nhGNUBITnwq+XCa+X+29leu0NaOYJau+SCNxNpDoB8g29ssEdKvu645LShxTUn6QMwkX5pQ4Dq93+6EJPjTQzb/HI4HFK+Fqd/HJMPMY1DvsNDIHBnX4mkCP4gCeRiRp03AA7645WE6tE6wx47xJYiVQ+qSMZDX6CgeFq+ndXPEhgQu+mNxIMAZG1f3B2ffh6FALjR78eeWvV+m7HS+6Fd+MR9t7EwiGYy92fjlPr8T2/9uHYjoYxuv11mi43Zfz7fhmLKFp+xg2aem6v3f3cweuuzstevby9x/eNiW3"
+    },
+    "trigger.config.ts": {
+      "contentHash": "adcdfe70f4a26349ca395039f9dfeffb",
+      "contents": "eJxtUcuK2zAU3Rv8D2enDHhGA7NzNi1TZhg6y+5KKLJ1ZSsjS4oebtKQfy+2EkpLV7ocHZ3HlZ68CwlnSFLa0rOzSg+4QAU3gX1KQQ8DhQdJM4/yg89PbFtXnOOtvFNq8jRA25hISDiFfY4JwqdXSnWlb+qF11wv/q/fZW0kp2MiG7WzkfcuENuiruqKjquQJCWySX+F3ZzrCvDB7alPLdgy/eh+DXvK+SiVzqfDwf40B8OahRiyTXqiFsw6SQUzbninmUwLZtxQsEkcv+Qgkna2xdPj4wquEVusjsCfqC2+FwjXppu7Bpzj26gjRmGloYiXl3VXvQuB+mROcBadSyOejcsSwkq8u16Ym1LZ1eYML/oPMdDiwozuZu3jvaSZ7XApNl+JPNLipVzAyeUAl0YKkOTJSrK9plhkd005OcdnKcGUyWTTfUnNkNzaKlhhltkHmskmdNlKo+0AHWO+Sd2IS6w4iuBZ86/ersHCvaymUoe1wgO//jpbwlzutr8B8yHP8w=="
+    },
+    "trigger/tasks.ts": {
+      "contentHash": "da44f0ef5fdc2086fbf599a8cc84b907",
+      "contents": "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"
+    },
+    "tsconfig.json": {
+      "contentHash": "8c78ccf385dbeab29d3d1b3a4b79e81f",
+      "contents": "eJxlUctqwzAQvBv6D4uOprHbQi85FUoPDQ2FXksosrUkavRCWqcpJv9eJFtJ7J7EzuzOzo76AoC1Vjup0L87ktYEtoS+AABgxP0WiS2BYXi4u39ktwOuZMOW8JkKACasHpmhqCSh543CC4rB4JFYKjejClfK/qziOvIdjmDYS/cmm+cdtvsZQ162NMWMfdFyhmFYW9EpfDWE3ropqRM1XJQcTfAPDFZ1MYTY0XRGKPS5xUfygKtgzTqrXCnLYBUnFAM3u+o7HKOiR97SIhZ5yLQeNRriajrgVLeV6Styyv34xqu5TidcIgU4TaJ1nHaXfwRgT3V5pQXAqrrMo5siC5zieDSlOoHn/rRngeZQiYpCtl6Wdfm/PF9WxaGafh2GetY6UAIPM7oY/TM8zg1YgV96DDa2Faeb4g/jubd7"
+    }
+  },
+  "target": "dev"
+}

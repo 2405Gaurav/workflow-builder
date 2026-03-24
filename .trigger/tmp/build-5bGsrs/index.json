@@ -1,0 +1,33 @@
+{
+  "configPath": "G:\\project\\.trigger\\tmp\\build-5bGsrs\\trigger.config.mjs",
+  "customConditions": [
+  ],
+  "queues": [
+  ],
+  "runtime": "node",
+  "runtimeVersion": "22.12.0",
+  "tasks": [
+    {
+      "entryPoint": "G:\\project\\.trigger\\tmp\\build-5bGsrs\\tasks.mjs",
+      "filePath": "trigger/tasks.ts",
+      "id": "execute-llm",
+      "maxDuration": 300
+    },
+    {
+      "entryPoint": "G:\\project\\.trigger\\tmp\\build-5bGsrs\\tasks.mjs",
+      "filePath": "trigger/tasks.ts",
+      "id": "crop-image",
+      "maxDuration": 300
+    },
+    {
+      "entryPoint": "G:\\project\\.trigger\\tmp\\build-5bGsrs\\tasks.mjs",
+      "filePath": "trigger/tasks.ts",
+      "id": "extract-frame",
+      "maxDuration": 300
+    }
+  ],
+  "timings": {
+    "trigger/tasks.ts": 1.613399999999956
+  },
+  "workerEntryPoint": "G:\\project\\.trigger\\tmp\\build-5bGsrs\\dev-run-worker.mjs"
+}
