@@ -37,7 +37,7 @@ const nodeTypes = {
  */
 const defaultEdgeOptions = {
   animated: false,
-  type: 'bezier',
+  type: 'default',
   style: {
     stroke: '#facc15', // Krea Yellow (Tailwind yellow-400)
     strokeWidth: 2,
