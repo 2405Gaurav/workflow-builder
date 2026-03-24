@@ -1,8 +1,7 @@
 // NextFlow Prisma Schema — Neon DB (PostgreSQL)
 
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+provider = "prisma-client-js"
 }
 
 datasource db {
