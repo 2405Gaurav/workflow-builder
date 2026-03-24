@@ -4,8 +4,9 @@ import { memo } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { ExtractFrameNodeData } from '@/lib/types';
 import { useWorkflowStore } from '@/lib/store';
-import { Film, X } from 'lucide-react';
+import { X, Clock, Scissors, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import Image from 'next/image';
 
 export const ExtractFrameNode = memo(({ id, data }: NodeProps<Node<ExtractFrameNodeData>>) => {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
@@ -14,108 +15,130 @@ export const ExtractFrameNode = memo(({ id, data }: NodeProps<Node<ExtractFrameN
 
   const videoConnected = isInputConnected(id, 'default');
 
-  const statusClass =
-    data.status === 'running' ? 'node-running' :
-    data.status === 'success' ? 'node-success' :
-    data.status === 'error' ? 'node-error' :
-    'node-idle';
+  const statusDotColor =
+    data.status === 'running' ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]' :
+    data.status === 'success' ? 'bg-green-500' :
+    data.status === 'error'   ? 'bg-red-500' :
+    'bg-white/20';
+
+  const ringClass =
+    data.status === 'running' ? 'ring-running' :
+    data.status === 'error'   ? 'ring-error'   :
+    data.status === 'success' ? 'ring-success'  :
+    'ring-idle';
 
   return (
-    <div className={`rounded-xl min-w-[260px] overflow-hidden ${statusClass}`}
-      style={{
-        background: 'linear-gradient(145deg, rgba(30, 30, 40, 0.95), rgba(20, 20, 30, 0.98))',
-        border: data.status === 'running' ? '1.5px solid rgba(6, 182, 212, 0.6)' :
-                data.status === 'success' ? '1.5px solid rgba(16, 185, 129, 0.5)' :
-                data.status === 'error' ? '1.5px solid rgba(239, 68, 68, 0.5)' :
-                '1.5px solid rgba(6, 182, 212, 0.2)',
-      }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2"
-        style={{ background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(6, 182, 212, 0.05))' }}
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: 'rgba(6, 182, 212, 0.2)' }}
-          >
-            <Film size={14} className="text-cyan-400" />
-          </div>
-          <span className="font-semibold text-xs text-gray-200 tracking-wide">Extract Frame</span>
-        </div>
-        <button
-          onClick={() => deleteNode(id)}
-          className="w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 transition-colors"
-        >
-          <X size={12} className="text-gray-500" />
-        </button>
-      </div>
+    <>
+      <style>{`
+        @keyframes borderPulse {
+          0%, 100% {
+            box-shadow: 0 0 0 0px rgba(59,130,246,0), 0 0 12px 1px rgba(59,130,246,0.15);
+            border-color: rgba(59,130,246,0.25);
+          }
+          50% {
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.18), 0 0 18px 3px rgba(59,130,246,0.25);
+            border-color: rgba(59,130,246,0.7);
+          }
+        }
+        .ring-running {
+          border-color: rgba(59,130,246,0.4);
+          animation: borderPulse 2.8s ease-in-out infinite;
+        }
+        .ring-error {
+          border-color: rgba(239,68,68,0.7);
+          box-shadow: 0 0 0 1.5px rgba(239,68,68,0.15), 0 0 16px 2px rgba(239,68,68,0.2);
+        }
+        .ring-success {
+          border-color: rgba(34,197,94,0.35);
+        }
+        .ring-idle {
+          border-color: rgba(255,255,255,0.10);
+        }
+      `}</style>
 
-      {/* Body */}
-      <div className="p-3 space-y-2.5">
-        {/* Connection indicator */}
-        {videoConnected && (
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-pink-500/10 border border-pink-500/20">
-            <div className="w-2 h-2 rounded-full bg-pink-400"></div>
-            <span className="text-[9px] text-pink-400">Video input connected</span>
+      <div className={`bg-[#1a1a1a] border rounded-xl shadow-2xl min-w-[280px] max-w-[320px] overflow-hidden group transition-colors duration-500 ${ringClass}`}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-[#1a1a1a] sticky top-0 z-10">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full transition-colors duration-500 ${statusDotColor}`} />
+            <span className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Extract Frame</span>
+          </div>
+          <button
+            onClick={() => deleteNode(id)}
+            className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded flex items-center justify-center hover:bg-white/5 transition-all"
+          >
+            <X size={12} className="text-white/40 hover:text-white" />
+          </button>
+        </div>
+
+        {/* Error — inline on this node only */}
+        {data.status === 'error' && data.error && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border-b border-red-500/20">
+            <AlertCircle size={12} className="text-red-400 shrink-0" />
+            <span className="text-[10px] text-red-400 font-medium truncate">{data.error}</span>
           </div>
         )}
 
-        {/* Timestamp */}
-        <div className="space-y-1">
-          <label className="text-[10px] uppercase tracking-wider text-gray-500 font-medium">Timestamp (sec)</label>
-          <Input
-            type="number"
-            min="0"
-            step="0.1"
-            value={data.timestamp || 0}
-            onChange={(e) => updateNodeData(id, { timestamp: Number(e.target.value) })}
-            className="text-xs h-8 bg-white/5 border-white/10 text-gray-200 focus:border-cyan-500/50 focus:ring-cyan-500/20"
-            placeholder="e.g., 2.5"
-          />
-        </div>
-
-        {/* Extracted frame result */}
-        {data.extractedFrameUrl && (
-          <div className="space-y-1">
-            <label className="text-[10px] uppercase tracking-wider text-cyan-400 font-medium">Extracted Frame</label>
-            <div className="rounded-lg overflow-hidden border border-white/10">
-              <img
+        <div className="max-h-[450px] overflow-y-auto flex flex-col [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
+          {/* Preview area */}
+          <div className="bg-[#0d0d0d] min-h-[140px] flex items-center justify-center border-b border-white/5 relative">
+            {data.extractedFrameUrl ? (
+              <Image
                 src={data.extractedFrameUrl}
-                alt="Extracted frame"
-                className="w-full h-24 object-cover"
+                alt="Extracted Frame"
+                width={320}
+                height={160}
+                unoptimized
+                className="w-full h-40 object-cover"
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-2 text-white/20 p-10">
+                <Scissors size={32} strokeWidth={1} />
+                <span className="text-[9px] uppercase tracking-widest font-bold">Awaiting extraction</span>
+              </div>
+            )}
+          </div>
+
+          {/* Settings area */}
+          <div className="p-3 bg-[#161616] space-y-4">
+            <div className={`text-[8px] px-2 py-1 rounded border inline-block font-bold tracking-tighter ${
+              videoConnected
+                ? 'border-pink-500/30 text-pink-400 bg-pink-500/5'
+                : 'border-white/10 text-white/40 bg-white/5'
+            }`}>
+              {videoConnected ? 'VIDEO INPUT CONNECTED' : 'NO VIDEO SOURCE'}
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 text-white/50">
+                <Clock size={10} />
+                <label className="text-[9px] uppercase font-bold">Time Offset (Sec)</label>
+              </div>
+              <Input
+                type="number"
+                step="0.1"
+                value={data.timestamp || 0}
+                onChange={(e) => updateNodeData(id, { timestamp: Number(e.target.value) })}
+                className="h-8 bg-[#0d0d0d] border-white/5 text-white text-[11px] px-2 focus:border-yellow-500/50 focus:ring-0 rounded-md shadow-inner"
               />
             </div>
           </div>
-        )}
+        </div>
 
-        {data.status === 'error' && data.error && (
-          <div className="text-[10px] text-red-400 bg-red-500/10 p-2 rounded-lg border border-red-500/20">
-            {data.error}
-          </div>
-        )}
-
-        {data.executionTime && (
-          <div className="text-[10px] text-gray-500 flex items-center gap-1">
-            ⚡ {data.executionTime}ms
-          </div>
-        )}
+        {/* Handles */}
+        <Handle
+          type="target"
+          position={Position.Left}
+          className="!w-3.5 !h-3.5 !bg-[#eab308] !border-2 !border-[#1a1a1a] !-left-2"
+        />
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="image-output"
+          className="!w-3.5 !h-3.5 !bg-[#eab308] !border-2 !border-[#1a1a1a] !-right-2"
+        />
       </div>
-
-      {/* Input Handle (video) */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="!w-3 !h-3 !bg-pink-500 !border-2 !border-pink-300/50"
-      />
-
-      {/* Output Handle (image) */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!w-3 !h-3 !bg-cyan-500 !border-2 !border-cyan-300/50"
-        id="image-output"
-      />
-    </div>
+    </>
   );
 });
 

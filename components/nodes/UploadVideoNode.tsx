@@ -4,7 +4,7 @@ import { memo, useRef } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { UploadVideoNodeData } from '@/lib/types';
 import { useWorkflowStore } from '@/lib/store';
-import { Video, Upload, X, Loader2 } from 'lucide-react';
+import { Upload, X, Loader2, Film, AlertCircle } from 'lucide-react';
 
 export const UploadVideoNode = memo(({ id, data }: NodeProps<Node<UploadVideoNodeData>>) => {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
@@ -43,44 +43,52 @@ export const UploadVideoNode = memo(({ id, data }: NodeProps<Node<UploadVideoNod
     }
   };
 
-  const statusClass =
-    data.status === 'running' ? 'node-running' :
-    data.status === 'success' ? 'node-success' :
-    data.status === 'error' ? 'node-error' :
-    'node-idle';
+  const statusDotColor =
+    data.status === 'running' ? 'bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.8)]' :
+    data.status === 'success' ? 'bg-green-500' :
+    data.status === 'error'   ? 'bg-red-500' :
+    'bg-white/20';
+
+  const wrapperClass =
+    data.status === 'running'
+      ? 'border-blue-500/60 shadow-[0_0_20px_rgba(59,130,246,0.3)] animate-pulse'
+      : data.status === 'error'
+      ? 'border-red-500/70 shadow-[0_0_20px_rgba(239,68,68,0.35)]'
+      : data.status === 'success'
+      ? 'border-green-500/30'
+      : 'border-white/10';
 
   return (
-    <div className={`rounded-xl min-w-[260px] overflow-hidden ${statusClass}`}
-      style={{
-        background: 'linear-gradient(145deg, rgba(30, 30, 40, 0.95), rgba(20, 20, 30, 0.98))',
-        border: data.status === 'running' ? '1.5px solid rgba(236, 72, 153, 0.6)' :
-                data.status === 'success' ? '1.5px solid rgba(16, 185, 129, 0.5)' :
-                data.status === 'error' ? '1.5px solid rgba(239, 68, 68, 0.5)' :
-                '1.5px solid rgba(236, 72, 153, 0.2)',
-      }}
-    >
+    <div className={`bg-[#1a1a1a] border rounded-xl shadow-2xl min-w-[280px] max-w-[320px] overflow-hidden group transition-all duration-300 ${wrapperClass}`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2"
-        style={{ background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(236, 72, 153, 0.05))' }}
-      >
+      <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-[#1a1a1a] sticky top-0 z-10">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: 'rgba(236, 72, 153, 0.2)' }}
-          >
-            <Video size={14} className="text-pink-400" />
-          </div>
-          <span className="font-semibold text-xs text-gray-200 tracking-wide">Upload Video</span>
+          <div className={`w-2 h-2 rounded-full ${statusDotColor} transition-colors duration-500`} />
+          <span className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Video Asset</span>
         </div>
         <button
           onClick={() => deleteNode(id)}
-          className="w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 transition-colors"
+          className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded flex items-center justify-center hover:bg-white/5 transition-all"
         >
-          <X size={12} className="text-gray-500" />
+          <X size={12} className="text-white/40 hover:text-white" />
         </button>
       </div>
 
-      {/* Body */}
-      <div className="p-3">
+      {/* Error banner */}
+      {data.status === 'error' && data.error && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border-b border-red-500/20">
+          <AlertCircle size={12} className="text-red-400 shrink-0" />
+          <span className="text-[10px] text-red-400 font-medium truncate">{data.error}</span>
+        </div>
+      )}
+
+      {/* Scrollable Body */}
+      <div className="max-h-[450px] overflow-y-auto flex flex-col
+        [&::-webkit-scrollbar]:w-1
+        [&::-webkit-scrollbar-track]:bg-transparent
+        [&::-webkit-scrollbar-thumb]:bg-white/10
+        [&::-webkit-scrollbar-thumb]:rounded-full">
+
         <input
           ref={fileInputRef}
           type="file"
@@ -89,52 +97,71 @@ export const UploadVideoNode = memo(({ id, data }: NodeProps<Node<UploadVideoNod
           className="hidden"
         />
 
-        {data.videoPreview ? (
-          <div className="space-y-2">
-            <div className="relative rounded-lg overflow-hidden border border-white/10">
+        {/* Playable Hero Area */}
+        <div className="bg-[#0d0d0d] min-h-[160px] relative flex flex-col items-center justify-center group/video-container">
+          {data.videoPreview ? (
+            <div className="w-full relative">
               <video
                 src={data.videoPreview}
-                className="w-full h-28 object-cover"
+                className="w-full h-44 object-cover"
                 controls
+                playsInline
               />
+              <div className="absolute top-2 right-2 opacity-0 group-hover/video-container:opacity-100 transition-opacity z-20">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-1 bg-black/80 text-white text-[9px] font-bold rounded-full border border-white/10 backdrop-blur-md uppercase tracking-tighter"
+                >
+                  Change Source
+                </button>
+              </div>
             </div>
+          ) : (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full text-[10px] py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-gray-200 transition-all"
+              disabled={data.status === 'running'}
+              className="flex flex-col items-center gap-3 text-white/50 hover:text-white/70 p-10 transition-colors"
             >
-              Change Video
+              {data.status === 'running' ? (
+                <Loader2 size={32} strokeWidth={1.5} className="animate-spin text-yellow-500" />
+              ) : (
+                <>
+                  <Upload size={32} strokeWidth={1} />
+                  <span className="text-[9px] uppercase tracking-widest font-bold text-center">Drop or Upload Video</span>
+                </>
+              )}
             </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={data.status === 'running'}
-            className="w-full py-6 rounded-lg border-2 border-dashed border-pink-500/20 bg-pink-500/5 hover:bg-pink-500/10 hover:border-pink-500/40 transition-all flex flex-col items-center gap-2 group"
-          >
-            {data.status === 'running' ? (
-              <Loader2 size={20} className="text-pink-400 animate-spin" />
-            ) : (
-              <Upload size={20} className="text-pink-400 group-hover:scale-110 transition-transform" />
-            )}
-            <span className="text-[10px] text-gray-500 group-hover:text-gray-300 transition-colors">
-              Drop or click to upload
-            </span>
-          </button>
-        )}
+          )}
+        </div>
 
-        {data.status === 'error' && data.error && (
-          <div className="mt-2 text-[10px] text-red-400 bg-red-500/10 p-2 rounded-lg border border-red-500/20">
-            {data.error}
+        {/* Info & Settings Area */}
+        <div className="p-3 bg-[#161616] space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Film size={10} className="text-white/50" />
+              <span className="text-[9px] text-white/50 uppercase font-mono tracking-tighter truncate max-w-[150px]">
+                {data.videoUrl ? 'Source_Output.mp4' : 'No Media Detected'}
+              </span>
+            </div>
+            {data.status === 'success' && (
+              <span className="text-[8px] px-1.5 py-0.5 rounded-sm bg-green-500/10 text-green-500 border border-green-500/20 font-bold uppercase">Ready</span>
+            )}
           </div>
-        )}
+
+          {data.executionTime && (
+            <div className="text-[9px] text-white/30 font-mono italic">
+              Processed in {data.executionTime}ms
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Output Handle */}
+      {/* Output Handle — larger yellow dot */}
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-3 !h-3 !bg-pink-500 !border-2 !border-pink-300/50"
         id="video-output"
+        className="!w-3.5 !h-3.5 !bg-[#eab308] !border-2 !border-[#1a1a1a] !-right-2 hover:!scale-150 transition-transform cursor-crosshair"
       />
     </div>
   );
