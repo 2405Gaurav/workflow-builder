@@ -88,6 +88,6 @@
     "@trigger.dev/build": "4.4.3",
     "@types/fluent-ffmpeg": "^2.1.28",
     "dotenv": "^17.3.1",
-    "typescript": "^6.0.2"
+    "typescript": "^5.9.3"
   }
 }
