@@ -44,7 +44,29 @@ export default function WorkflowPage() {
             LLM Workflow Builder
           </span>
         </div>
-        <UserButton appearance={{ elements: { avatarBox: 'w-7 h-7' } }} />
+       <UserButton 
+  appearance={{
+    elements: {
+      avatarBox: 'w-7 h-7 ring-2 ring-purple-500/40 ring-offset-1 ring-offset-[#0a0a0f]',
+      userButtonPopoverCard: 'bg-[#12121a] border border-white/10 shadow-xl shadow-black/50',
+      userButtonPopoverActionButton: 'text-gray-300 hover:text-white hover:bg-white/5',
+      userButtonPopoverActionButtonText: 'text-gray-300',
+      userButtonPopoverActionButtonIcon: 'text-gray-400',
+      userButtonPopoverFooter: 'border-t border-white/10',
+      userPreviewMainIdentifier: 'text-white font-semibold',
+      userPreviewSecondaryIdentifier: 'text-gray-400',
+      userButtonTrigger: 'focus:shadow-none focus:ring-2 focus:ring-purple-500/50',
+    },
+    variables: {
+      colorBackground: '#12121a',
+      colorText: '#ffffff',
+      colorTextSecondary: '#9ca3af',
+      colorPrimary: '#7c3aed',
+      colorDanger: '#ef4444',
+      borderRadius: '0.75rem',
+    }
+  }} 
+/>
       </header>
 
       {/* Main Content Area */}
