@@ -84,13 +84,13 @@ export type WorkflowEdge = Edge;
 
 export interface Workflow {
   id: string;
-  user_id: string;
+  userId: string;
   name: string;
   description: string;
-  nodes: WorkflowNode[];
-  edges: WorkflowEdge[];
-  created_at: string;
-  updated_at: string;
+  nodes: any[]; // Or your ReactFlow node type
+  edges: any[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type ExecutionScope = 'full' | 'partial' | 'single';
@@ -108,13 +108,13 @@ export interface NodeExecutionResult {
 
 export interface WorkflowExecution {
   id: string;
-  workflow_id: string;
-  user_id: string;
-  status: ExecutionStatus;
-  scope: ExecutionScope;
-  duration_ms?: number;
-  node_results: Record<string, NodeExecutionResult>;
-  startedAt: string;
-  completed_at?: string;
-  error_message?: string;
+  workflowId: string | null;
+  userId: string;
+  status: 'running' | 'success' | 'failed';
+  scope: 'full' | 'partial' | 'single';
+  durationMs: number | null;      // Matches Prisma camelCase
+  nodeResults: Record<string, any>; // Matches Prisma camelCase
+  startedAt: string;              // Matches Prisma camelCase
+  completedAt: string | null;     // Matches Prisma camelCase
+  errorMessage: string | null;    // Matches Prisma camelCase
 }

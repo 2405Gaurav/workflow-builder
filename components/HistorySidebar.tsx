@@ -138,10 +138,10 @@ export function HistorySidebar() {
                       {getScopeBadge(execution.scope)}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      {/* FIXED: Using snake_case duration_ms */}
-                      {execution.duration_ms && (
+                      {/* SYNC: Using durationMs */}
+                      {execution.durationMs && (
                         <span className="text-[10px] text-gray-500 font-mono">
-                          {(execution.duration_ms / 1000).toFixed(1)}s
+                          {(execution.durationMs / 1000).toFixed(1)}s
                         </span>
                       )}
                       {isFetchingDetail === execution.id ? (
@@ -159,15 +159,24 @@ export function HistorySidebar() {
 
                   <div className="flex items-center gap-1 text-[10px] text-gray-500">
                     <Clock size={10} />
-                    {/*  */}
+                    {/* SYNC: Using startedAt */}
                     {formatDistanceToNow(new Date(execution.startedAt), { addSuffix: true })}
                   </div>
+
+                  {/* SYNC: Using errorMessage */}
+                  {execution.errorMessage && (
+                    <div className="mt-2 flex items-start gap-1.5 text-[10px] text-red-400 bg-red-500/10 p-2 rounded-lg border border-red-500/15">
+                      <AlertCircle size={12} className="shrink-0 mt-0.5" />
+                      <span>{execution.errorMessage}</span>
+                    </div>
+                  )}
                 </button>
 
+                {/* Expanded Section */}
                 {currentExecution?.id === execution.id && (
                   <div className="px-3 pb-3 border-t border-white/5 pt-2 space-y-1.5">
-                    {/* FIXED: Using snake_case node_results */}
-                    {!currentExecution.node_results ? (
+                    {/* Check if currentExecution actually has the nodeResults fetched yet */}
+                    {!currentExecution.nodeResults ? (
                       <div className="flex items-center justify-center py-4">
                         <Loader2 size={14} className="animate-spin text-gray-600" />
                       </div>
@@ -176,7 +185,7 @@ export function HistorySidebar() {
                         <p className="text-[9px] uppercase tracking-wider text-gray-500 font-medium mb-2">
                           Node Results
                         </p>
-                        {Object.entries(currentExecution.node_results as Record<string, any>).map(([nodeId, result]) => (
+                        {Object.entries(currentExecution.nodeResults as Record<string, any>).map(([nodeId, result]) => (
                           <div
                             key={nodeId}
                             className="rounded-lg p-2 transition-colors"
@@ -197,11 +206,16 @@ export function HistorySidebar() {
                             {result.outputs && (
                               <div className="text-[9px] text-gray-500 truncate mt-1">
                                 {result.outputs.text && (
-                                  // FIXED: Escaped quotes for ESLint
                                   <span className="block italic">&quot;{result.outputs.text.substring(0, 40)}...&quot;</span>
                                 )}
                                 {result.outputs.frameUrl && <span className="block text-purple-400">🖼️ Frame Extracted</span>}
                                 {result.outputs.croppedImageUrl && <span className="block text-blue-400">✂️ Image Cropped</span>}
+                              </div>
+                            )}
+
+                            {result.error && (
+                              <div className="text-[9px] text-red-400 mt-1 truncate">
+                                ❌ {result.error}
                               </div>
                             )}
                           </div>
