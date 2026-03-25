@@ -89,6 +89,7 @@ export default function SignInPage() {
        </div>
 
           <SignIn
+           forceRedirectUrl="/"
             appearance={{
               variables: {
                 colorBackground: '#111118',

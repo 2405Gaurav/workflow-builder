@@ -88,6 +88,7 @@ export default function SignUpPage() {
        </div>
 
           <SignUp
+           forceRedirectUrl="/"
             appearance={{
               variables: {
                 colorBackground: '#111118',

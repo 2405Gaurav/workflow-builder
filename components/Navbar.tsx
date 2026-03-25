@@ -1,9 +1,8 @@
-// Replace your entire landing nav section (the return at the bottom of Navbar.tsx)
-// with this. Keep the workflow variant as-is, only the landing nav changes.
-
+// components/Navbar.tsx
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/nextjs';
+import { UserButton, useAuth } from '@clerk/nextjs';
+import Link from 'next/link';
 
 interface NavbarProps {
   variant?: 'landing' | 'workflow';
@@ -28,7 +27,7 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
       }}
     >
       {/* Logo — no background, blends into dark page */}
-      <div className="flex items-center gap-3">
+      <Link href="/" className="flex items-center gap-3">
         <Image
           src="/logo.png"
           alt="NextFlow"
@@ -37,44 +36,42 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
           className="object-contain opacity-90 hover:opacity-100 transition-opacity duration-300"
           style={{ filter: 'brightness(1.1) drop-shadow(0 0 12px rgba(255,255,255,0.08))' }}
         />
-      </div>
+      </Link>
 
       {/* Auth */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         {isLoaded && !isSignedIn && (
           <>
-            <SignInButton mode="modal" forceRedirectUrl="/workflow">
-              <button
-                className="text-[13px] font-medium tracking-wide transition-all duration-200 cursor-pointer"
-                style={{ color: 'rgba(255,255,255,0.45)' }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.9)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.45)')}
-              >
-                Sign in
-              </button>
-            </SignInButton>
+            <Link
+              href="/sign-in"
+              className="text-[13px] font-medium tracking-wide transition-all duration-200"
+              style={{ color: 'rgba(255,255,255,0.45)' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.9)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.45)')}
+            >
+              Sign in
+            </Link>
 
-            <SignUpButton mode="modal" forceRedirectUrl="/workflow">
-              <button
-                className="text-[13px] font-semibold tracking-wide px-5 py-2 rounded-full cursor-pointer transition-all duration-200"
-                style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  color: 'rgba(255,255,255,0.85)',
-                  backdropFilter: 'blur(8px)',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.14)';
-                  e.currentTarget.style.color = '#fff';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
-                }}
-              >
-                Get Started
-              </button>
-            </SignUpButton>
+            <Link
+              href="/sign-up"
+              className="text-[13px] font-semibold tracking-wide px-5 py-2 rounded-full transition-all duration-200"
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(255,255,255,0.85)',
+                backdropFilter: 'blur(8px)',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.14)';
+                e.currentTarget.style.color = '#fff';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
+              }}
+            >
+              Get Started
+            </Link>
           </>
         )}
 
@@ -82,7 +79,7 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
           <>
             <button
               onClick={() => router.push('/workflow')}
-              className="text-[13px] font-medium tracking-wide cursor-pointer transition-all duration-200"
+              className="text-[13px] font-medium tracking-wide cursor-pointer transition-all duration-200 mr-2"
               style={{ color: 'rgba(255,255,255,0.5)' }}
               onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.9)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
