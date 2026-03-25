@@ -174,7 +174,6 @@ export const extractFrameTask = task({
     const path = await import("path");
     const os = await import("os");
 
-    // FIX 1: Ensure timestamp is a valid number (e.g., "015" becomes 15)
     const seekTime = parseFloat(String(payload.timestamp || 0));
 
     const runId = Math.random().toString(36).substring(7);
@@ -185,28 +184,32 @@ export const extractFrameTask = task({
     const framePath = path.join(tempDir, "output_frame.jpg");
 
     try {
-      // ... (fetch/base64 logic remains same) ...
+      const videoResponse = await fetch(payload.videoUrl);
+      if (!videoResponse.ok) {
+        throw new Error(`Failed to fetch video: ${videoResponse.statusText}`);
+      }
+      const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
+      // await fs.writeFile(videoPath, videoBuffer);
+         await fs.writeFile(videoPath, new Uint8Array(videoBuffer));
 
       await new Promise<void>((resolve, reject) => {
         ffmpeg(videoPath)
-          // FIX 2: Using .seek() after input is often safer for single frames
-          .seek(seekTime) 
+          .seek(seekTime)
           .frames(1)
           .output(framePath)
-          // FIX 3: Force overwrite ('-y') to prevent the command from hanging/crashing
-          .outputOptions('-y') 
+          .outputOptions('-y')
           .on("end", resolve)
-         .on("error", (err: Error, stdout: string, stderr: string) => {
-  console.error("FFmpeg Stderr:", stderr);
-  reject(new Error(`FFmpeg failed: ${err.message}`));
-})
+          .on("error", (err: Error, stdout: string, stderr: string) => {
+            console.error("FFmpeg Stderr:", stderr);
+            reject(new Error(`FFmpeg failed: ${err.message}`));
+          })
           .run();
       });
 
       const frameBuffer = await fs.readFile(framePath);
       const blob = await put(`frames/frame-${Date.now()}.jpg`, frameBuffer, {
-          access: "public",
-          contentType: "image/jpeg",
+        access: "public",
+        contentType: "image/jpeg",
       });
 
       return { frameUrl: blob.url };
