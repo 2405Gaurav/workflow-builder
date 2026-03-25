@@ -7,6 +7,7 @@ interface WorkflowState {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
   selectedNodes: string[];
+    executeExtractFrame: (nodeId: string) => Promise<void>;
   
   
   // Workflow metadata

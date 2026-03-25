@@ -289,30 +289,63 @@ export class ExecutionEngine {
         return { imageUrl: result.croppedImageUrl };
       }
 
-      case 'extract-frame': {
-        const videoUrl = inputs['default']?.videoUrl || inputs['video-input']?.videoUrl || node.data.videoUrl;
+     case 'extract-frame': {
+  const videoUrl = inputs['default']?.videoUrl || inputs['video-input']?.videoUrl || node.data.videoUrl;
 
-        if (!videoUrl) {
-          throw new Error('No video URL provided for frame extraction');
-        }
+  if (!videoUrl) {
+    throw new Error('No video URL provided for frame extraction');
+  }
 
-        const response = await fetch('/api/execute/extract-frame', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            videoUrl,
-            timestamp: node.data.timestamp,
-          }),
-        });
+  // Step 1: Trigger the task, get runId back
+  const response = await fetch('/api/execute/extract-frame', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      videoUrl,
+      timestamp: node.data.timestamp ?? 0,
+    }),
+  });
 
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({}));
-          throw new Error(err.error || 'Extract frame execution failed');
-        }
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Extract frame trigger failed');
+  }
 
-        const result = await response.json();
-        return { imageUrl: result.frameUrl };
+  const { runId, error: triggerError } = await response.json();
+  if (triggerError) throw new Error(triggerError);
+
+  // Step 2: Poll until COMPLETED or FAILED
+  const frameUrl = await new Promise<string>((resolve, reject) => {
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      if (attempts > 30) {
+        clearInterval(poll);
+        reject(new Error('Extract frame timed out'));
+        return;
       }
+      try {
+        const statusRes = await fetch(`/api/execute/status?runId=${runId}`);
+        const result = await statusRes.json();
+
+        if (result.status === 'COMPLETED') {
+          clearInterval(poll);
+          const url = result.output?.frameUrl;
+          if (!url) reject(new Error('No frame URL in output'));
+          else resolve(url);
+        } else if (result.status === 'FAILED') {
+          clearInterval(poll);
+          reject(new Error('FFmpeg failed'));
+        }
+      } catch (err) {
+        clearInterval(poll);
+        reject(err);
+      }
+    }, 2000);
+  });
+
+  return { imageUrl: frameUrl };
+}
 
       default:
         throw new Error(`Unknown node type: ${(node.data as any).type}`);

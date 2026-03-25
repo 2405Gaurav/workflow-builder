@@ -7,11 +7,13 @@ import { useWorkflowStore } from '@/lib/store';
 import { X, Clock, Scissors, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
+import { Play } from 'lucide-react';
 
 export const ExtractFrameNode = memo(({ id, data }: NodeProps<Node<ExtractFrameNodeData>>) => {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
   const deleteNode = useWorkflowStore((state) => state.deleteNode);
   const isInputConnected = useWorkflowStore((state) => state.isInputConnected);
+  const executeExtractFrame = useWorkflowStore((state) => state.executeExtractFrame);
 
   const videoConnected = isInputConnected(id, 'default');
 
@@ -100,29 +102,39 @@ export const ExtractFrameNode = memo(({ id, data }: NodeProps<Node<ExtractFrameN
           </div>
 
           {/* Settings area */}
-          <div className="p-3 bg-[#161616] space-y-4">
-            <div className={`text-[8px] px-2 py-1 rounded border inline-block font-bold tracking-tighter ${
-              videoConnected
-                ? 'border-pink-500/30 text-pink-400 bg-pink-500/5'
-                : 'border-white/10 text-white/40 bg-white/5'
-            }`}>
-              {videoConnected ? 'VIDEO INPUT CONNECTED' : 'NO VIDEO SOURCE'}
-            </div>
+        <div className="p-3 bg-[#161616] space-y-4">
+  <div className={`text-[8px] px-2 py-1 rounded border inline-block font-bold tracking-tighter ${
+    videoConnected
+      ? 'border-pink-500/30 text-pink-400 bg-pink-500/5'
+      : 'border-white/10 text-white/40 bg-white/5'
+  }`}>
+    {videoConnected ? 'VIDEO INPUT CONNECTED' : 'NO VIDEO SOURCE'}
+  </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5 text-white/50">
-                <Clock size={10} />
-                <label className="text-[9px] uppercase font-bold">Time Offset (Sec)</label>
-              </div>
-              <Input
-                type="number"
-                step="0.1"
-                value={data.timestamp || 0}
-                onChange={(e) => updateNodeData(id, { timestamp: Number(e.target.value) })}
-                className="h-8 bg-[#0d0d0d] border-white/5 text-white text-[11px] px-2 focus:border-yellow-500/50 focus:ring-0 rounded-md shadow-inner"
-              />
-            </div>
-          </div>
+  <div className="space-y-1.5">
+    <div className="flex items-center gap-1.5 text-white/50">
+      <Clock size={10} />
+      <label className="text-[9px] uppercase font-bold">Time Offset (Sec)</label>
+    </div>
+    <Input
+      type="number"
+      step="0.1"
+      value={data.timestamp || 0}
+      onChange={(e) => updateNodeData(id, { timestamp: Number(e.target.value) })}
+      className="h-8 bg-[#0d0d0d] border-white/5 text-white text-[11px] px-2 focus:border-yellow-500/50 focus:ring-0 rounded-md shadow-inner"
+    />
+  </div>
+
+  {/* 👇 Run button */}
+  <button
+    onClick={() => executeExtractFrame(id)}
+    disabled={!videoConnected || data.status === 'running'}
+    className="w-full flex items-center justify-center gap-1.5 h-8 rounded-md bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-[10px] font-bold uppercase tracking-widest hover:bg-yellow-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+  >
+    <Play size={10} />
+    {data.status === 'running' ? 'Extracting...' : 'Extract Frame'}
+  </button>
+</div>
         </div>
 
         {/* Handles */}
