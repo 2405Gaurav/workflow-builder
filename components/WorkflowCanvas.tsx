@@ -8,6 +8,7 @@ import {
   useReactFlow,
   ConnectionLineType,
   Panel,
+  MiniMap,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { motion } from 'framer-motion';
@@ -31,9 +32,8 @@ const nodeTypes = {
   'extract-frame': ExtractFrameNode,
 };
 
-// 1. PREMIUM STRING-LIKE EDGE CONFIG
 const defaultEdgeOptions = {
-  type: 'default', // Default is Bezier, which feels like "Strings"
+  type: 'default', 
   animated: true,
   style: {
     stroke: 'rgba(255, 255, 255, 0.15)',
@@ -44,7 +44,7 @@ const defaultEdgeOptions = {
 const connectionLineStyle = {
   stroke: 'rgba(255, 255, 255, 0.4)',
   strokeWidth: 2,
-  strokeDasharray: '6,4', // Dotted string look while dragging
+  strokeDasharray: '6,4',
 };
 
 export function WorkflowCanvas() {
@@ -60,18 +60,24 @@ export function WorkflowCanvas() {
     addNode,
   } = useWorkflowStore();
 
+  // 1. DYNAMIC CONNECTION VALIDATION
   const isValidConnection = useCallback((connection: any) => {
     const source = nodes.find(n => n.id === connection.source);
     const target = nodes.find(n => n.id === connection.target);
     if (!source || !target || source.id === target.id) return false;
+
     const sourceOutput = source.data.outputType;
     const targetHandle = connection.targetHandle || ''; 
+    
+    // Check if output matches the specific input handle requirement
     if (targetHandle.includes('image') && sourceOutput !== 'image') return false;
     if (targetHandle.includes('video') && sourceOutput !== 'video') return false;
     if (targetHandle.includes('text') && sourceOutput !== 'text') return false;
+
     return true;
   }, [nodes]);
 
+  // 2. DRAG & DROP LOGIC
   const onDrop = useCallback((event: DragEvent) => {
     event.preventDefault();
     const type = event.dataTransfer.getData('application/reactflow-type') as NodeDataType;
@@ -99,12 +105,11 @@ export function WorkflowCanvas() {
         isValidConnection={isValidConnection}
         connectionMode={ConnectionMode.Loose}
         defaultEdgeOptions={defaultEdgeOptions}
-        // Change to Bezier for that "Dynamic String" look
         connectionLineType={ConnectionLineType.Bezier} 
         connectionLineStyle={connectionLineStyle}
         fitView
         snapToGrid
-        snapGrid={[12, 12]} // Tighter grid for more precise organic movement
+        snapGrid={[12, 12]}
         proOptions={{ hideAttribution: true }}
       >
         <Background
@@ -112,6 +117,27 @@ export function WorkflowCanvas() {
           gap={24}
           size={1}
           color="rgba(255, 255, 255, 0.07)"
+        />
+
+        {/* ── FIXED MINIMAP ── */}
+        <MiniMap 
+          className="!bg-[#080808]/80 backdrop-blur-xl !rounded-2xl border border-white/5 shadow-2xl transition-all duration-300"
+          style={{ 
+            right: 300, 
+            bottom: 24, 
+            width: 200, 
+            height: 120,
+            zIndex: 40 
+          }}
+          nodeColor={(n) => {
+            if (n.data.status === 'running') return '#3b82f6';
+            if (n.data.type === 'llm') return '#a855f7';
+            return 'rgba(255, 255, 255, 0.1)';
+          }}
+          nodeStrokeColor="rgba(255, 255, 255, 0.05)"
+          nodeStrokeWidth={3}
+          maskColor="rgba(0, 0, 0, 0.8)"
+          position="bottom-right"
         />
 
         <Panel position="bottom-center" className="mb-6">
@@ -131,7 +157,7 @@ export function WorkflowCanvas() {
       </ReactFlow>
 
       <style jsx global>{`
-        /* 1. LARGE PREMIUM HANDLES */
+        /* HANDLES */
         .react-flow__handle {
           width: 12px !important;
           height: 12px !important;
@@ -146,7 +172,7 @@ export function WorkflowCanvas() {
           box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
         }
 
-        /* 2. DYNAMIC STRING LINES (Marching Ants) */
+        /* STRING LINES */
         .react-flow__edge-path {
           stroke-dasharray: 8;
           stroke-dashoffset: 16;
@@ -158,7 +184,7 @@ export function WorkflowCanvas() {
           to { stroke-dashoffset: 0; }
         }
 
-        /* 3. PREMIUM NODE PULSE (High Intensity but Smooth) */
+        /* PREMIUM RUNNING PULSE */
         .node-running-css {
           position: relative;
         }
@@ -184,14 +210,10 @@ export function WorkflowCanvas() {
           100% { background-position: 200% 50%; opacity: 0.5; }
         }
 
-        /* Running Handle Pulse */
-        .react-flow__handle-connecting {
-            background: #3b82f6 !important;
-            animation: handle-pulse 1s infinite alternate;
-        }
-        @keyframes handle-pulse {
-            from { transform: scale(1); box-shadow: 0 0 0px rgba(59,130,246,0); }
-            to { transform: scale(1.3); box-shadow: 0 0 10px rgba(59,130,246,0.5); }
+        .react-flow__minimap-viewport {
+          fill: rgba(59, 130, 246, 0.05) !important;
+          stroke: rgba(59, 130, 246, 0.4) !important;
+          stroke-width: 2px !important;
         }
       `}</style>
     </div>

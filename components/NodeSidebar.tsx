@@ -97,7 +97,7 @@ export function NodeSidebar() {
         }}
       >
         {/* 1. TOP HEADER & COLLAPSE TOGGLE */}
-        <div className={`flex items-center justify-between px-3 pt-3 pb-1 shrink-0 ${isCollapsed ? 'flex-col gap-4' : ''}`}>
+        <div className={`flex items-center justify-between px-1 pt-1 pb-1 shrink-0 ${isCollapsed ? 'flex-col gap-4' : ''}`}>
           <AnimatePresence mode="wait">
             {!isCollapsed && (
               <motion.div 
