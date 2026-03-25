@@ -179,6 +179,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { tasks, runs } from "@trigger.dev/sdk/v3";
+import { put } from "@vercel/blob";
 
 export async function POST(req: NextRequest) {
   try {
@@ -196,7 +197,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    //  Trigger.dev (PRIMARY)
+    // ==============================
+    // ✅ 1. Trigger.dev (PRIMARY)
+    // ==============================
     if (process.env.TRIGGER_SECRET_KEY) {
       try {
         const run = await tasks.trigger("extract-frame", {
@@ -206,11 +209,10 @@ export async function POST(req: NextRequest) {
 
         let output: any = null;
 
-        // Poll for completion (up to 15 seconds)
         for (let i = 0; i < 15; i++) {
           await new Promise((r) => setTimeout(r, 1000));
           const status = await runs.retrieve(run.id);
-          
+
           if (status.status === "COMPLETED") {
             output = status.output;
             break;
@@ -225,7 +227,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ frameUrl: output.frameUrl });
         }
       } catch (err) {
-        console.warn("Trigger.dev failed → switching to fallback:", err);
+        console.warn("Trigger.dev failed → fallback:", err);
       }
     }
 
@@ -238,8 +240,6 @@ export async function POST(req: NextRequest) {
       const path = await import("path");
       const os = await import("os");
 
-      // We use the global 'ffmpeg' command directly.
-      // This works because you added FFmpeg to your System PATH and restarted VS Code.
       ffmpeg.setFfmpegPath("ffmpeg");
 
       const videoPath = path.join(os.tmpdir(), `video-${Date.now()}.mp4`);
@@ -247,21 +247,19 @@ export async function POST(req: NextRequest) {
 
       let videoBuffer: Buffer;
 
-      // Handle Data URLs vs Remote URLs
+      // Handle base64 vs URL
       if (videoUrl.startsWith("data:")) {
         const match = videoUrl.match(/^data:video\/\w+;base64,(.+)$/);
-        if (!match) throw new Error("Invalid base64 video format");
+        if (!match) throw new Error("Invalid base64 video");
         videoBuffer = Buffer.from(match[1], "base64");
       } else {
         const res = await fetch(videoUrl);
-        if (!res.ok) throw new Error("Failed to fetch video from URL");
+        if (!res.ok) throw new Error("Failed to fetch video");
         videoBuffer = Buffer.from(await res.arrayBuffer());
       }
 
-      // Write video to temporary disk space
       await fs.writeFile(videoPath, new Uint8Array(videoBuffer));
 
-      // Execute Frame Extraction
       await new Promise<void>((resolve, reject) => {
         ffmpeg(videoPath)
           .screenshots({
@@ -269,34 +267,43 @@ export async function POST(req: NextRequest) {
             filename: path.basename(framePath),
             folder: path.dirname(framePath),
           })
-          .on("end", () => resolve())
-          .on("error", (err: any) => {
-            console.error("Local FFmpeg Error:", err);
-            reject(err);
-          });
+          .on("end", resolve)
+          .on("error", reject);
       });
 
       const frameBuffer = await fs.readFile(framePath);
 
-      // Cleanup files immediately
+      // ✅ Upload frame to Vercel Blob
+      const blob = await put(
+        `frames/frame-${Date.now()}.jpg`,
+        frameBuffer,
+        {
+          access: "public",
+          contentType: "image/jpeg",
+        }
+      );
+
+      // cleanup
       await Promise.all([
         fs.unlink(videoPath).catch(() => {}),
-        fs.unlink(framePath).catch(() => {})
+        fs.unlink(framePath).catch(() => {}),
       ]);
 
       return NextResponse.json({
-        frameUrl: `data:image/jpeg;base64,${frameBuffer.toString("base64")}`,
+        frameUrl: blob.url,
       });
+
     } catch (fallbackError: any) {
-      console.error("Local FFmpeg fallback failed:", fallbackError.message);
+      console.error("FFmpeg fallback failed:", fallbackError.message);
     }
 
     return NextResponse.json(
       {
-        error: "Frame extraction failed. Ensure FFmpeg is installed on your system path.",
+        error: "Frame extraction failed",
       },
       { status: 500 }
     );
+
   } catch (error: any) {
     console.error("Extract frame main error:", error);
     return NextResponse.json(

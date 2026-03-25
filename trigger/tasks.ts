@@ -1,4 +1,5 @@
 import { task } from "@trigger.dev/sdk/v3";
+import { put } from "@vercel/blob";
 
 export const executeLLMTask = task({
   id: "execute-llm",
@@ -91,53 +92,76 @@ export const cropImageTask = task({
   },
 });
 
+
+
+
 // export const extractFrameTask = task({
-//   id: 'extract-frame',
-//   run: async (payload: {
-//     videoUrl: string;
-//     timestamp: number;
-//   }) => {
-//     const ffmpeg = await import('fluent-ffmpeg');
-//     const fs = await import('fs');
-//     const path = await import('path');
-//     const { promisify } = await import('util');
+//   id: "extract-frame",
+//   run: async (payload: { videoUrl: string; timestamp?: number }) => {
+//     // 1. DYNAMIC IMPORTS
+//     const ffmpeg = (await import("fluent-ffmpeg")).default;
+//     const fs = await import("fs/promises");
+//     const path = await import("path");
+//     const os = await import("os");
 
-//     const writeFile = promisify(fs.writeFile);
-//     const unlink = promisify(fs.unlink);
+//     // 2. SET UP FFMPEG PATH
+//     // The Trigger.dev ffmpeg() extension automatically sets the FFMPEG_PATH environment variable.
+//     // Locally on Windows, it will fall back to the "ffmpeg" command you added to your System Path.
+//     const ffmpegPath = process.env.FFMPEG_PATH || "ffmpeg";
+//     ffmpeg.setFfmpegPath(ffmpegPath);
 
-//     const tempVideoPath = path.join('/tmp', `video-${Date.now()}.mp4`);
-//     const tempFramePath = path.join('/tmp', `frame-${Date.now()}.jpg`);
+//     // 3. PREPARE TEMP FILES
+//     const runId = Math.random().toString(36).substring(7);
+//     const tempDir = path.join(os.tmpdir(), `extract-${runId}`);
+//     await fs.mkdir(tempDir, { recursive: true });
 
-//     const videoResponse = await fetch(payload.videoUrl);
-//     const videoBuffer = await videoResponse.arrayBuffer();
-//     await writeFile(tempVideoPath, new Uint8Array(videoBuffer));
+//     const videoPath = path.join(tempDir, "input_video.mp4");
+//     const framePath = path.join(tempDir, "output_frame.jpg");
 
-//     return new Promise((resolve, reject) => {
-//       ffmpeg.default(tempVideoPath)
-//         .screenshots({
-//           timestamps: [payload.timestamp],
-//           filename: path.basename(tempFramePath),
-//           folder: path.dirname(tempFramePath),
-//         })
-//         .on('end', async () => {
-//           try {
-//             const frameBuffer = await fs.promises.readFile(tempFramePath);
-//             const base64 = frameBuffer.toString('base64');
-//             const frameUrl = `data:image/jpeg;base64,${base64}`;
+//     try {
+//       // 4. HANDLE VIDEO DATA
+//       let videoBuffer: Buffer;
+//       if (payload.videoUrl.startsWith("data:")) {
+//         const match = payload.videoUrl.match(/^data:video\/\w+;base64,(.+)$/);
+//         if (!match) throw new Error("Invalid base64 video format");
+//         videoBuffer = Buffer.from(match[1], "base64");
+//       } else {
+//         const res = await fetch(payload.videoUrl);
+//         if (!res.ok) throw new Error(`Failed to fetch video: ${res.statusText}`);
+//         videoBuffer = Buffer.from(await res.arrayBuffer());
+//       }
 
-//             await unlink(tempVideoPath);
-//             await unlink(tempFramePath);
+//       // Write video to temp file
+//       await fs.writeFile(videoPath, new Uint8Array(videoBuffer));
 
-//             resolve({ frameUrl });
-//           } catch (error) {
-//             reject(error);
-//           }
-//         })
-//         .on('error', reject);
-//     });
+//       // 5. EXTRACT FRAME
+//       // Using .seekInput() before the input is much faster than .screenshots()
+//       await new Promise<void>((resolve, reject) => {
+//         ffmpeg(videoPath)
+//           .seekInput(payload.timestamp ?? 0) // Fast seek to timestamp
+//           .frames(1)                         // Extract only 1 frame
+//           .output(framePath)
+//           .on("end", () => resolve())
+//           .on("error", (err: any) => {
+//             console.error("FFmpeg Error:", err.message);
+//             reject(new Error(`FFmpeg failed: ${err.message}`));
+//           })
+//           .run();
+//       });
+
+//       // 6. RETURN RESULT
+//       const frameBuffer = await fs.readFile(framePath);
+//       return {
+//         frameUrl: `data:image/jpeg;base64,${frameBuffer.toString("base64")}`,
+//       };
+
+//     } finally {
+//       // 7. CLEANUP
+//       // Clean up the entire temporary directory
+//       await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+//     }
 //   },
 // });
-
 
 
 
@@ -145,19 +169,14 @@ export const cropImageTask = task({
 export const extractFrameTask = task({
   id: "extract-frame",
   run: async (payload: { videoUrl: string; timestamp?: number }) => {
-    // 1. DYNAMIC IMPORTS
     const ffmpeg = (await import("fluent-ffmpeg")).default;
     const fs = await import("fs/promises");
     const path = await import("path");
     const os = await import("os");
 
-    // 2. SET UP FFMPEG PATH
-    // The Trigger.dev ffmpeg() extension automatically sets the FFMPEG_PATH environment variable.
-    // Locally on Windows, it will fall back to the "ffmpeg" command you added to your System Path.
     const ffmpegPath = process.env.FFMPEG_PATH || "ffmpeg";
     ffmpeg.setFfmpegPath(ffmpegPath);
 
-    // 3. PREPARE TEMP FILES
     const runId = Math.random().toString(36).substring(7);
     const tempDir = path.join(os.tmpdir(), `extract-${runId}`);
     await fs.mkdir(tempDir, { recursive: true });
@@ -166,45 +185,48 @@ export const extractFrameTask = task({
     const framePath = path.join(tempDir, "output_frame.jpg");
 
     try {
-      // 4. HANDLE VIDEO DATA
       let videoBuffer: Buffer;
+
       if (payload.videoUrl.startsWith("data:")) {
         const match = payload.videoUrl.match(/^data:video\/\w+;base64,(.+)$/);
         if (!match) throw new Error("Invalid base64 video format");
         videoBuffer = Buffer.from(match[1], "base64");
       } else {
         const res = await fetch(payload.videoUrl);
-        if (!res.ok) throw new Error(`Failed to fetch video: ${res.statusText}`);
+        if (!res.ok) throw new Error(`Failed to fetch video`);
         videoBuffer = Buffer.from(await res.arrayBuffer());
       }
 
-      // Write video to temp file
       await fs.writeFile(videoPath, new Uint8Array(videoBuffer));
 
-      // 5. EXTRACT FRAME
-      // Using .seekInput() before the input is much faster than .screenshots()
       await new Promise<void>((resolve, reject) => {
         ffmpeg(videoPath)
-          .seekInput(payload.timestamp ?? 0) // Fast seek to timestamp
-          .frames(1)                         // Extract only 1 frame
+          .seekInput(payload.timestamp ?? 0)
+          .frames(1)
           .output(framePath)
-          .on("end", () => resolve())
-          .on("error", (err: any) => {
-            console.error("FFmpeg Error:", err.message);
-            reject(new Error(`FFmpeg failed: ${err.message}`));
-          })
+          .on("end", resolve)
+          .on("error", reject)
           .run();
       });
 
-      // 6. RETURN RESULT
       const frameBuffer = await fs.readFile(framePath);
+
+      // ✅ UPLOAD TO BLOB (KEY FIX)
+      const blob = await put(
+        `frames/frame-${Date.now()}.jpg`,
+        frameBuffer,
+        {
+          access: "public",
+          contentType: "image/jpeg",
+        }
+      );
+
+      // ✅ RETURN CLEAN URL
       return {
-        frameUrl: `data:image/jpeg;base64,${frameBuffer.toString("base64")}`,
+        frameUrl: blob.url,
       };
 
     } finally {
-      // 7. CLEANUP
-      // Clean up the entire temporary directory
       await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
     }
   },
