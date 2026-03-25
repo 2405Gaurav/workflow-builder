@@ -118,6 +118,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { tasks, runs } from "@trigger.dev/sdk/v3";
+import { put } from "@vercel/blob";
 
 export async function POST(req: NextRequest) {
   try {
@@ -137,7 +138,6 @@ export async function POST(req: NextRequest) {
     // ==============================
     if (process.env.TRIGGER_SECRET_KEY) {
       try {
-        // Trigger the "crop-image" task defined in your trigger/ folder
         const run = await tasks.trigger("crop-image", {
           imageUrl,
           x: x || 0,
@@ -148,7 +148,6 @@ export async function POST(req: NextRequest) {
 
         let output: any = null;
 
-        // Poll for completion (similar to your extract-frame logic)
         for (let i = 0; i < 20; i++) {
           await new Promise((r) => setTimeout(r, 1000));
           const status = await runs.retrieve(run.id);
@@ -164,19 +163,23 @@ export async function POST(req: NextRequest) {
         }
 
         if (output?.croppedImageUrl) {
+          // 🚨 guard against base64 from trigger.dev
+          if (output.croppedImageUrl.startsWith("data:")) {
+            throw new Error("Trigger.dev returned base64");
+          }
           return NextResponse.json({ croppedImageUrl: output.croppedImageUrl });
         }
       } catch (err) {
-        console.warn("Trigger.dev crop failed → switching to fallback:", err);
+        console.warn("Trigger.dev crop failed → fallback:", err);
       }
     }
 
     // ==============================
-    // ✅ 2. LOCAL FALLBACK
+    // ✅ 2. LOCAL FALLBACK (FIXED)
     // ==============================
-    // (Keep your existing sharp fallback logic here just in case)
     try {
       const sharp = (await import("sharp")).default;
+
       let imageBuffer: Buffer;
 
       if (imageUrl.startsWith("data:")) {
@@ -197,15 +200,28 @@ export async function POST(req: NextRequest) {
           width: Math.floor((metadata.width || 0) * ((width || 100) / 100)),
           height: Math.floor((metadata.height || 0) * ((height || 100) / 100)),
         })
+        .jpeg()
         .toBuffer();
 
+      // ✅ Upload to Blob
+      const blob = await put(
+        `images/cropped-${Date.now()}.jpg`,
+        croppedBuffer,
+        {
+          access: "public",
+          contentType: "image/jpeg",
+        }
+      );
+
       return NextResponse.json({
-        croppedImageUrl: `data:image/jpeg;base64,${croppedBuffer.toString("base64")}`,
+        croppedImageUrl: blob.url,
       });
+
     } catch (fallbackError) {
       console.error("Crop fallback error:", fallbackError);
       return NextResponse.json({ croppedImageUrl: imageUrl });
     }
+
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
