@@ -2,15 +2,18 @@ import { WorkflowNode, WorkflowEdge } from './types';
 
 /**
  * Product Marketing Generator - Sample Workflow
- * 
- * Branch A: Upload Image → Crop → Text (system) + Text (product) → LLM
- * Branch B: Upload Video → Extract Frame
- * Final: LLM Node takes output of Branch A + cropped image + extracted frame
- * Output: marketing post
+ *
+ * Branch A: Upload Image → Crop Image → (Text #1 as system_prompt, Text #2 as user_message, Cropped Image) → LLM Node #1
+ * Branch B: Upload Video → Extract Frame (at 50%)
+ * Convergence: LLM Node #2 waits for BOTH branches
+ *   - system_prompt ← Text Node #3
+ *   - user_message  ← LLM Node #1 output
+ *   - images        ← Cropped Image (Branch A) + Extracted Frame (Branch B)
+ * Output: Final marketing tweet/post
  */
 export const sampleWorkflow: { nodes: WorkflowNode[]; edges: WorkflowEdge[] } = {
   nodes: [
-    // Branch A: Image processing
+    // ── Branch A ─────────────────────────────────────────────
     {
       id: 'upload-image-1',
       type: 'upload-image',
@@ -30,6 +33,7 @@ export const sampleWorkflow: { nodes: WorkflowNode[]; edges: WorkflowEdge[] } = 
         label: 'crop-image',
         type: 'crop-image',
         outputType: 'image',
+        // centre crop at 80 % width/height as per spec
         x: 10,
         y: 10,
         width: 80,
@@ -38,53 +42,55 @@ export const sampleWorkflow: { nodes: WorkflowNode[]; edges: WorkflowEdge[] } = 
       },
     },
 
-    // Branch A: Text inputs
+    // Text Node #1 — system prompt for LLM #1
     {
-      id: 'text-system',
+      id: 'text-system-1',
       type: 'text',
-      position: { x: 50, y: 250 },
+      position: { x: 50, y: 280 },
       data: {
         label: 'text',
         type: 'text',
         outputType: 'text',
-        text: 'You are a product marketing expert. Analyze images and text to create compelling marketing content.',
-        status: 'idle',
-      },
-    },
-    {
-      id: 'text-product',
-      type: 'text',
-      position: { x: 50, y: 450 },
-      data: {
-        label: 'text',
-        type: 'text',
-        outputType: 'text',
-        text: 'This is our latest premium wireless headphone. Key features: noise cancellation, 40hr battery, premium materials.',
+        text: 'You are a professional marketing copywriter. Generate a compelling one-paragraph product description.',
         status: 'idle',
       },
     },
 
-    // Branch A: First LLM
+    // Text Node #2 — product details / user message for LLM #1
+    {
+      id: 'text-product-2',
+      type: 'text',
+      position: { x: 50, y: 480 },
+      data: {
+        label: 'text',
+        type: 'text',
+        outputType: 'text',
+        text: 'Product: Wireless Bluetooth Headphones. Features: Noise cancellation, 30-hour battery, foldable design.',
+        status: 'idle',
+      },
+    },
+
+    // LLM Node #1 — product description generator (Branch A convergence)
+  // LLM Node #1 — product description generator (Branch A convergence)
     {
       id: 'llm-analyzer',
       type: 'llm',
-      position: { x: 750, y: 200 },
+      position: { x: 750, y: 220 },
       data: {
         label: 'llm',
         type: 'llm',
         outputType: 'text',
-        model: 'gemini-1.5-flash',
-        systemPrompt: 'You are a product marketing expert.',
-        userMessage: 'Based on the product image and description provided, create a detailed product analysis highlighting unique selling points, target audience, and key benefits.',
+        model: 'claude-sonnet-4-20250514',
+        userMessage: 'Based on the product image and description provided, generate a compelling one-paragraph product description highlighting key features and benefits.',
         status: 'idle',
       },
     },
 
-    // Branch B: Video processing
+    // ── Branch B ─────────────────────────────────────────────
     {
       id: 'upload-video-1',
       type: 'upload-video',
-      position: { x: 50, y: 650 },
+      position: { x: 50, y: 700 },
       data: {
         label: 'upload-video',
         type: 'upload-video',
@@ -92,81 +98,126 @@ export const sampleWorkflow: { nodes: WorkflowNode[]; edges: WorkflowEdge[] } = 
         status: 'idle',
       },
     },
-    {
+   {
       id: 'extract-frame-1',
       type: 'extract-frame',
-      position: { x: 400, y: 650 },
+      position: { x: 400, y: 700 },
       data: {
         label: 'extract-frame',
         type: 'extract-frame',
         outputType: 'image',
-        timestamp: 2.5,
+        timestamp: 0.5,   // 0.5 = 50% as a number ratio, not a string
         status: 'idle',
       },
     },
 
-    // Final: Marketing post generator
+    // Text Node #3 — system prompt for the convergence LLM #2
+    {
+      id: 'text-system-3',
+      type: 'text',
+      position: { x: 750, y: 620 },
+      data: {
+        label: 'text',
+        type: 'text',
+        outputType: 'text',
+        text: 'You are a social media manager. Create a tweet-length marketing post based on the product image and video frame.',
+        status: 'idle',
+      },
+    },
+
+    // ── Convergence ───────────────────────────────────────────
+  // LLM Node #2 — final marketing post (waits for BOTH branches)
     {
       id: 'llm-marketing',
       type: 'llm',
-      position: { x: 1150, y: 350 },
+      position: { x: 1150, y: 400 },
       data: {
         label: 'llm',
         type: 'llm',
         outputType: 'text',
-        model: 'gemini-1.5-pro',
-        systemPrompt: 'You are a creative marketing copywriter specializing in social media campaigns.',
-        userMessage: 'Using the product analysis and visual assets provided, create an engaging social media marketing post. Include:\n\n1. A catchy headline (emoji included)\n2. Compelling product description (2-3 sentences)\n3. Key feature highlights (bullet points)\n4. Call to action\n5. 5-7 relevant hashtags\n\nMake it feel premium and aspirational.',
+        model: 'claude-sonnet-4-20250514',
+        userMessage: 'Using the product description and visual assets provided, create an engaging tweet-length social media marketing post with a catchy headline, key highlights, a call to action, and relevant hashtags.',
         status: 'idle',
       },
     },
   ],
+
   edges: [
-    // Branch A: Image → Crop
+    // ── Branch A ─────────────────────────────────────────────
+    // Upload Image → Crop Image
     {
       id: 'e-img-crop',
       source: 'upload-image-1',
       target: 'crop-image-1',
       animated: true,
     },
-    // Branch A: Crop → LLM (image input)
+    // Crop Image → LLM #1  (image input)
     {
-      id: 'e-crop-llm',
+      id: 'e-crop-llm1-image',
       source: 'crop-image-1',
       target: 'llm-analyzer',
       targetHandle: 'image-input',
       animated: true,
     },
-    // Branch A: Text (product) → LLM (text input)
+    // Text #1 → LLM #1  (system_prompt)
     {
-      id: 'e-text-llm',
-      source: 'text-product',
+      id: 'e-text1-llm1-system',
+      source: 'text-system-1',
+      target: 'llm-analyzer',
+      targetHandle: 'system-prompt-input',
+      animated: true,
+    },
+    // Text #2 → LLM #1  (user_message)
+    {
+      id: 'e-text2-llm1-user',
+      source: 'text-product-2',
       target: 'llm-analyzer',
       targetHandle: 'text-input',
       animated: true,
     },
-    // Branch B: Video → Extract Frame
+
+    // ── Branch B ─────────────────────────────────────────────
+    // Upload Video → Extract Frame
     {
       id: 'e-vid-frame',
       source: 'upload-video-1',
       target: 'extract-frame-1',
       animated: true,
     },
-    // Final: LLM Analyzer → Marketing LLM (text input)
+
+    // ── Convergence ───────────────────────────────────────────
+    // Text #3 → LLM #2  (system_prompt)
     {
-      id: 'e-analysis-marketing',
+      id: 'e-text3-llm2-system',
+      source: 'text-system-3',
+      target: 'llm-marketing',
+      targetHandle: 'system-prompt-input',
+      animated: true,
+    },
+    // LLM #1 output → LLM #2  (user_message)
+    {
+      id: 'e-llm1-llm2-user',
       source: 'llm-analyzer',
       target: 'llm-marketing',
       targetHandle: 'text-input',
       animated: true,
     },
-    // Final: Extracted Frame → Marketing LLM (image input)
-    {
-      id: 'e-frame-marketing',
-      source: 'extract-frame-1',
-      target: 'llm-marketing',
-      targetHandle: 'image-input',
-      animated: true,
-    },
+    // Cropped Image (Branch A) → LLM #2  (image input #1)
+// Cropped Image (Branch A) → LLM #2  (image input #1)
+{
+  id: 'e-crop-llm2-image',
+  source: 'crop-image-1',
+  target: 'llm-marketing',
+  targetHandle: 'image-input',   // ← keep as-is
+  animated: true,
+},
+// Extracted Frame (Branch B) → LLM #2  (image input #2)
+{
+  id: 'e-frame-llm2-image',
+  source: 'extract-frame-1',
+  target: 'llm-marketing',
+  targetHandle: 'image-input-2', // ← already different ✅
+  animated: true,
+},
   ],
 };

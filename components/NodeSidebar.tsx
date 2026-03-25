@@ -20,7 +20,7 @@ const nodeConfigs = [
   { type: 'text' as NodeDataType, label: 'Text', description: 'Text input', icon: FileText, color: 'bg-blue-500/10 text-blue-400', outputType: 'text' as const },
   { type: 'upload-image' as NodeDataType, label: 'Image', description: 'Upload asset', icon: ImageIcon, color: 'bg-emerald-500/10 text-emerald-400', outputType: 'image' as const },
   { type: 'upload-video' as NodeDataType, label: 'Video', description: 'Video source', icon: Video, color: 'bg-amber-500/10 text-amber-400', outputType: 'video' as const },
-  { type: 'llm' as NodeDataType, label: 'Enhancer', description: 'AI Processing', icon: Brain, color: 'bg-purple-500/10 text-purple-400', outputType: 'text' as const },
+  { type: 'llm' as NodeDataType, label: 'Enhancer', description: 'LLM Processing', icon: Brain, color: 'bg-purple-500/10 text-purple-400', outputType: 'text' as const },
   { type: 'crop-image' as NodeDataType, label: 'Edit', description: 'Crop & Resize', icon: Crop, color: 'bg-pink-500/10 text-pink-400', outputType: 'image' as const },
   { type: 'extract-frame' as NodeDataType, label: 'Realtime', description: 'Frame extraction', icon: Film, color: 'bg-cyan-500/10 text-cyan-400', outputType: 'image' as const },
 ];
@@ -179,9 +179,7 @@ export function NodeSidebar() {
               <span className="text-[12px] font-bold text-white/90 truncate w-full tracking-tight">
                 {user?.firstName || 'Guest'}
               </span>
-              <span className="text-[9px] text-purple-400 font-mono font-bold uppercase tracking-widest animate-pulse">
-                Pro
-              </span>
+            
             </div>
           )}
         </div>

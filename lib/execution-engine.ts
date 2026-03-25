@@ -223,9 +223,13 @@ export class ExecutionEngine {
             // Append connected text context
             finalMessage = `${value.text}\n\n${finalMessage}`;
           }
-          if (handle === 'image-input' && value?.imageUrl) {
-            connectedImages.push(value.imageUrl);
-          }
+        if ((handle === 'image-input' || handle === 'image-input-2') && value?.imageUrl) {
+  connectedImages.push(value.imageUrl);
+}
+          if (handle === 'system-prompt-input' && value?.text) {
+  // override systemPrompt from connected text node
+  node.data.systemPrompt = value.text;
+}
           // Handle default connections
           if (handle === 'default') {
             if (value?.text) {

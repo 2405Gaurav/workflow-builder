@@ -194,12 +194,33 @@ export const LLMNode = memo(({ id, data }: NodeProps<Node<LLMNodeData>>) => {
           className="!w-3.5 !h-3.5 !-left-2 !bg-[#eab308] !border-2 !border-[#1a1a1a] !rounded-full !z-30"
         />
         <Handle
+  type="target"
+  position={Position.Left}
+  id="system-prompt-input"
+  style={{ top: '100px' }}
+  className="!w-3.5 !h-3.5 !-left-2 !bg-[#eab308] !border-2 !border-[#1a1a1a] !rounded-full !z-30"
+/>
+        <Handle
           type="target"
           position={Position.Left}
           id="image-input"
           style={{ top: '220px' }}
           className="!w-3.5 !h-3.5 !-left-2 !bg-[#eab308] !border-2 !border-[#1a1a1a] !rounded-full !z-30"
         />
+        <Handle
+  type="target"
+  position={Position.Left}
+  id="image-input"
+  style={{ top: '220px' }}
+  className="!w-3.5 !h-3.5 !-left-2 !bg-[#eab308] !border-2 !border-[#1a1a1a] !rounded-full !z-30"
+/>
+<Handle
+  type="target"
+  position={Position.Left}
+  id="image-input-2"
+  style={{ top: '260px' }}  
+  className="!w-3.5 !h-3.5 !-left-2 !bg-[#eab308] !border-2 !border-[#1a1a1a] !rounded-full !z-30"
+/>
         <Handle
           type="source"
           position={Position.Right}
