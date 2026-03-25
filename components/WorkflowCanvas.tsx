@@ -4,14 +4,14 @@ import { useCallback, useRef, DragEvent } from 'react';
 import {
   ReactFlow,
   Background,
-  Controls,
-  MiniMap,
-  BackgroundVariant,
   ConnectionMode,
   useReactFlow,
   ConnectionLineType,
+  Panel,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { motion } from 'framer-motion';
+import { Plus, MousePointer2, Hand, Scissors, Link2 } from 'lucide-react';
 
 import { useWorkflowStore } from '@/lib/store';
 import { TextNode } from './nodes/TextNode';
@@ -29,20 +29,22 @@ const nodeTypes = {
   'llm': LLMNode,
   'crop-image': CropImageNode,
   'extract-frame': ExtractFrameNode,
-} as const satisfies Record<string, any>;
+};
 
-/** 
- * Krea-style Edge Configuration
- * Uses the signature yellow color and smooth bezier curves
- */
+// 1. PREMIUM STRING-LIKE EDGE CONFIG
 const defaultEdgeOptions = {
-  animated: false,
-  type: 'default',
+  type: 'default', // Default is Bezier, which feels like "Strings"
+  animated: true,
   style: {
-    stroke: '#facc15', // Krea Yellow (Tailwind yellow-400)
+    stroke: 'rgba(255, 255, 255, 0.15)',
     strokeWidth: 2,
-    opacity: 0.9,
   },
+};
+
+const connectionLineStyle = {
+  stroke: 'rgba(255, 255, 255, 0.4)',
+  strokeWidth: 2,
+  strokeDasharray: '6,4', // Dotted string look while dragging
 };
 
 export function WorkflowCanvas() {
@@ -58,129 +60,148 @@ export function WorkflowCanvas() {
     addNode,
   } = useWorkflowStore();
 
-  // --- LOGIC PRESERVED EXACTLY ---
   const isValidConnection = useCallback((connection: any) => {
-    const sourceNode = nodes.find(n => n.id === connection.source);
-    const targetNode = nodes.find(n => n.id === connection.target);
-    if (!sourceNode || !targetNode) return false;
-    if (connection.source === connection.target) return false;
-    const sourceOutput = sourceNode.data.outputType;
-    const targetHandle = connection.targetHandle || 'default';
-    let acceptedType: string = targetNode.data.outputType;
-    if (targetNode.data.type === 'llm') {
-      if (targetHandle === 'text-input') acceptedType = 'text';
-      else if (targetHandle === 'image-input') acceptedType = 'image';
-      else return true;
-    }
-    if (targetNode.data.type === 'crop-image') acceptedType = 'image';
-    if (targetNode.data.type === 'extract-frame') acceptedType = 'video';
-    return sourceOutput === acceptedType;
+    const source = nodes.find(n => n.id === connection.source);
+    const target = nodes.find(n => n.id === connection.target);
+    if (!source || !target || source.id === target.id) return false;
+    const sourceOutput = source.data.outputType;
+    const targetHandle = connection.targetHandle || ''; 
+    if (targetHandle.includes('image') && sourceOutput !== 'image') return false;
+    if (targetHandle.includes('video') && sourceOutput !== 'video') return false;
+    if (targetHandle.includes('text') && sourceOutput !== 'text') return false;
+    return true;
   }, [nodes]);
-
-  const onDragOver = useCallback((event: DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-  }, []);
 
   const onDrop = useCallback((event: DragEvent) => {
     event.preventDefault();
     const type = event.dataTransfer.getData('application/reactflow-type') as NodeDataType;
-    const outputType = event.dataTransfer.getData('application/reactflow-output') as 'text' | 'image' | 'video';
+    const outputType = event.dataTransfer.getData('application/reactflow-output') as any;
     if (!type) return;
+
     const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
     const id = `${type}-${Date.now()}`;
-    const baseData = { label: type, type, outputType, status: 'idle' as const };
-    let data: any = baseData;
-    switch (type) {
-      case 'text': data = { ...baseData, text: '' }; break;
-      case 'upload-image': data = { ...baseData }; break;
-      case 'upload-video': data = { ...baseData }; break;
-      case 'llm': data = { ...baseData, model: 'gemini-1.5-flash', userMessage: '' }; break;
-      case 'crop-image': data = { ...baseData, x: 0, y: 0, width: 100, height: 100 }; break;
-      case 'extract-frame': data = { ...baseData, timestamp: 0 }; break;
-    }
-    const newNode: WorkflowNode = { id, type, position, data };
-    addNode(newNode);
+    const data = { label: type, type, outputType, status: 'idle' as const };
+    
+    addNode({ id, type, position, data } as WorkflowNode);
   }, [screenToFlowPosition, addNode]);
-  // --- END LOGIC PRESERVATION ---
 
   return (
-    <div ref={reactFlowWrapper} className="w-full h-full bg-[#080808]"> {/* Krea deep black */}
+    <div ref={reactFlowWrapper} className="w-full h-full bg-[#050505] relative">
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onDragOver={onDragOver}
+        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
         onDrop={onDrop}
         nodeTypes={nodeTypes}
-        connectionMode={ConnectionMode.Loose}
         isValidConnection={isValidConnection}
-        fitView
-        // UI Enhancements
-        connectionLineType={ConnectionLineType.Bezier}
-        connectionLineStyle={{ stroke: '#facc15', strokeWidth: 2 }}
+        connectionMode={ConnectionMode.Loose}
         defaultEdgeOptions={defaultEdgeOptions}
-        className="krea-theme"
-        proOptions={{ hideAttribution: true }}
+        // Change to Bezier for that "Dynamic String" look
+        connectionLineType={ConnectionLineType.Bezier} 
+        connectionLineStyle={connectionLineStyle}
+        fitView
         snapToGrid
-        snapGrid={[20, 20]}
+        snapGrid={[12, 12]} // Tighter grid for more precise organic movement
+        proOptions={{ hideAttribution: true }}
       >
-        {/* Subtler background dots to match Krea */}
         <Background
-          variant={BackgroundVariant.Dots}
-          gap={30}
+          variant={"dots" as any}
+          gap={24}
           size={1}
-          color="rgba(255, 255, 255, 0.04)"
-        />
-        
-        {/* Minimalist Control Styling */}
-        <Controls
-          className="!bg-[#1a1a1a] !border-white/10 !rounded-lg !shadow-2xl !fill-white"
-          showInteractive={false}
+          color="rgba(255, 255, 255, 0.07)"
         />
 
-        {/* Clean, dark MiniMap */}
-        <MiniMap
-          nodeStrokeWidth={0}
-          maskColor="rgba(0, 0, 0, 0.8)"
-          style={{
-            backgroundColor: '#0a0a0a',
-            borderRadius: 12,
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-          nodeColor={(node) => {
-            // Colors chosen to be muted but recognizable on the map
-            switch (node.data.type) {
-              case 'llm': return '#22c55e'; // Green
-              case 'text': return '#3b82f6'; // Blue
-              default: return '#333333';
-            }
-          }}
-          pannable
-          zoomable
-        />
+        <Panel position="bottom-center" className="mb-6">
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="flex items-center gap-1 p-1.5 bg-[#111]/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl"
+          >
+            <IconButton icon={Plus} />
+            <div className="w-px h-4 bg-white/10 mx-1" />
+            <IconButton icon={MousePointer2} active />
+            <IconButton icon={Hand} />
+            <IconButton icon={Scissors} />
+            <IconButton icon={Link2} />
+          </motion.div>
+        </Panel>
       </ReactFlow>
 
-      {/* Custom CSS for global styles if needed */}
       <style jsx global>{`
-        .react-flow__edge-path {
-          filter: drop-shadow(0 0 2px rgba(250, 204, 21, 0.1));
-        }
+        /* 1. LARGE PREMIUM HANDLES */
         .react-flow__handle {
-          width: 8px !important;
-          height: 8px !important;
-          background: #facc15 !important;
-          border: 2px solid #080808 !important;
+          width: 12px !important;
+          height: 12px !important;
+          background: #ffffff !important;
+          border: 3px solid #050505 !important;
+          box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         }
-        .react-flow__node {
-          cursor: grab;
+        .react-flow__handle:hover {
+          transform: scale(1.4);
+          background: #3b82f6 !important;
+          box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
         }
-        .react-flow__node:active {
-          cursor: grabbing;
+
+        /* 2. DYNAMIC STRING LINES (Marching Ants) */
+        .react-flow__edge-path {
+          stroke-dasharray: 8;
+          stroke-dashoffset: 16;
+          animation: flow 1.2s linear infinite;
+        }
+
+        @keyframes flow {
+          from { stroke-dashoffset: 16; }
+          to { stroke-dashoffset: 0; }
+        }
+
+        /* 3. PREMIUM NODE PULSE (High Intensity but Smooth) */
+        .node-running-css {
+          position: relative;
+        }
+        .node-running-css::before {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          border-radius: inherit;
+          padding: 2px;
+          background: linear-gradient(90deg, #3b82f6, #6366f1, #3b82f6);
+          background-size: 200% 100%;
+          animation: border-flow 2s linear infinite;
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: destination-out;
+          mask-composite: exclude;
+          box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+
+        @keyframes border-flow {
+          0% { background-position: 0% 50%; opacity: 0.5; }
+          50% { opacity: 1; }
+          100% { background-position: 200% 50%; opacity: 0.5; }
+        }
+
+        /* Running Handle Pulse */
+        .react-flow__handle-connecting {
+            background: #3b82f6 !important;
+            animation: handle-pulse 1s infinite alternate;
+        }
+        @keyframes handle-pulse {
+            from { transform: scale(1); box-shadow: 0 0 0px rgba(59,130,246,0); }
+            to { transform: scale(1.3); box-shadow: 0 0 10px rgba(59,130,246,0.5); }
         }
       `}</style>
     </div>
+  );
+}
+
+function IconButton({ icon: Icon, active = false }: { icon: any, active?: boolean }) {
+  return (
+    <button className={`p-2.5 rounded-xl transition-all hover:bg-white/5 ${active ? 'bg-white/10 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]' : 'text-white/30'}`}>
+      <Icon size={18} strokeWidth={active ? 2.5 : 2} />
+    </button>
   );
 }

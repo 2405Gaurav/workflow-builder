@@ -240,3 +240,57 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
+@keyframes premium-glow {
+  0% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.2), 0 0 0px rgba(59, 130, 246, 0.1); }
+  50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), 0 0 10px rgba(59, 130, 246, 0.2); }
+  100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.2), 0 0 0px rgba(59, 130, 246, 0.1); }
+}
+
+.node-running {
+  animation: premium-glow 2s infinite ease-in-out;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  position: relative;
+}
+
+/* The subtle "moving border" effect for running nodes */
+.node-running::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid #3b82f6;
+  border-radius: inherit;
+  mask-image: linear-gradient(to right, black, transparent);
+  animation: rotate-border 2s linear infinite;
+}
+
+@keyframes rotate-border {
+  from { rotate: 0deg; }
+  to { rotate: 360deg; }
+}
+/* LARGE MAGNETIC HANDLES */
+.react-flow__handle {
+  width: 12px !important;
+  height: 12px !important;
+  background: #ffffff !important;
+  border: 3px solid #050505 !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.react-flow__handle:hover {
+  transform: scale(1.5);
+  background: #3b82f6 !important; /* Glow blue on hover */
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+}
+
+/* Style for when a connection is actively being dragged */
+.react-flow__handle-connecting {
+  background: #3b82f6 !important;
+  animation: pulse-handle 1s infinite;
+}
+
+@keyframes pulse-handle {
+  0% { transform: scale(1); box-shadow: 0 0 0 0px rgba(59, 130, 246, 0.4); }
+  70% { transform: scale(1.2); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0px rgba(59, 130, 246, 0); }
+}

@@ -4,7 +4,11 @@ import { useEffect, useState } from 'react';
 import { useWorkflowStore } from '@/lib/store';
 import { useUser } from '@clerk/nextjs';
 import { formatDistanceToNow } from 'date-fns';
-import { Clock, CheckCircle, XCircle, Loader2, History, ChevronRight, Zap } from 'lucide-react';
+import { 
+  Clock, CheckCircle, XCircle, Loader2, 
+  History, ChevronRight, Zap, Activity 
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function HistorySidebar() {
   const { user } = useUser();
@@ -50,170 +54,197 @@ export function HistorySidebar() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'running': return <Loader2 size={12} className="text-zinc-500 animate-spin shrink-0" />;
-      case 'success': return <CheckCircle size={12} className="text-emerald-500 shrink-0" />;
-      case 'failed':  return <XCircle size={12} className="text-red-500 shrink-0" />;
-      default:        return <Clock size={12} className="text-zinc-600 shrink-0" />;
-    }
-  };
-
   return (
-    // Root: fixed width, hard clamp, no overflow
-    <div
-      className="h-full flex flex-col bg-[#09090b] border-l border-zinc-900 select-none"
-      style={{ width: '320px', maxWidth: '320px', overflow: 'hidden' }}
-    >
-      {/* Header */}
-      <div className="px-4 h-11 flex items-center justify-between border-b border-zinc-900 shrink-0 bg-[#0c0c0e]">
-        <div className="flex items-center gap-2">
-          <History size={14} className="text-zinc-500 shrink-0" />
-          <span className="text-[11px] font-semibold text-zinc-300 uppercase tracking-tight">History</span>
+    <div className="w-[320px] h-full flex flex-col bg-[#050505] border-l border-white/5 overflow-hidden select-none">
+      
+      {/* HEADER */}
+      <div className="px-5 h-16 flex items-center justify-between   bg-black/20 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7] animate-pulse" />
+          <span className="text-[11px] font-bold text-white/40 uppercase tracking-[0.2em]">
+            {"// Run History"}
+          </span>
         </div>
-        <span className="text-[10px] text-zinc-600 px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-900/50 shrink-0">
-          {executions.length} Runs
-        </span>
+        <div className="text-[10px] font-mono font-bold text-white/20 bg-white/5 px-2 py-1 rounded-md">
+          {executions.length} TOTAL
+        </div>
       </div>
 
-      {/* Scroll container — native, no shadcn ScrollArea */}
-      <div
-        className="flex-1 overflow-y-auto overflow-x-hidden"
-        style={{ width: '320px', maxWidth: '320px' }}
-      >
-        <div className="p-2 space-y-1" style={{ width: '304px' /* 320 - 2*8px padding */ }}>
+      {/* CONTENT AREA */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+        <div className="space-y-2">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <Loader2 size={18} className="text-zinc-700 animate-spin" />
-              <span className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Synchronizing...</span>
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <Loader2 size={20} className="text-white/10 animate-spin" />
+              <span className="text-[10px] text-white/20 uppercase tracking-widest font-bold font-mono">
+                Syncing logs...
+              </span>
             </div>
           ) : executions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 opacity-30 grayscale">
-              <Zap size={24} className="text-zinc-800 mb-2" />
-              <p className="text-[10px] font-bold uppercase tracking-widest">No Activity</p>
+            <div className="flex flex-col items-center justify-center py-24 opacity-20">
+              <Activity size={32} className="text-white mb-3" />
+              <p className="text-[10px] font-bold uppercase tracking-widest">No Recent Activity</p>
             </div>
           ) : (
-            executions.map((execution) => (
-              <div
-                key={execution.id}
-                className={`rounded-md transition-all border ${
-                  currentExecution?.id === execution.id
-                    ? 'bg-zinc-900/50 border-zinc-700'
-                    : 'bg-transparent border-transparent hover:bg-zinc-900/30 hover:border-zinc-800'
-                }`}
-                style={{ width: '100%', boxSizing: 'border-box' }}
-              >
-                <button
-                  onClick={() => handleSelectExecution(execution.id)}
-                  className="w-full p-2.5 text-left"
+            executions.map((execution, idx) => {
+              const isActive = currentExecution?.id === execution.id;
+              
+              return (
+                <motion.div
+                  key={execution.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.03 }}
+                  layout
+                  className={`group rounded-2xl border transition-all overflow-hidden ${
+                    isActive 
+                      ? 'bg-white/[0.04] border-white/10 shadow-2xl' 
+                      : 'bg-transparent border-transparent hover:bg-white/[0.02] hover:border-white/5'
+                  }`}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      {getStatusIcon(execution.status)}
-                      <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-400 border border-zinc-800 shrink-0">
-                        {execution.scope}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-2">
-                      {execution.durationMs && (
-                        <span className="text-[10px] text-zinc-600 font-mono">
-                          {(execution.durationMs / 1000).toFixed(1)}s
-                        </span>
-                      )}
-                      <ChevronRight
-                        size={12}
-                        className={`text-zinc-700 transition-transform duration-300 ${
-                          currentExecution?.id === execution.id ? 'rotate-90 text-zinc-400' : ''
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-zinc-500 font-medium truncate">
-                      {formatDistanceToNow(new Date(execution.startedAt), { addSuffix: true })}
-                    </span>
-                    {isFetchingDetail === execution.id && (
-                      <Loader2 size={10} className="animate-spin text-purple-500 shrink-0 ml-2" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Expanded Details */}
-                {currentExecution?.id === execution.id && (
-                  <div
-                    className="border-t border-zinc-800 px-2 pb-2 pt-2 space-y-1"
-                    style={{ width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
+                  <button
+                    onClick={() => handleSelectExecution(execution.id)}
+                    className="w-full p-4 text-left relative"
                   >
-                    {!currentExecution.nodeResults ? (
-                      <div className="py-4 flex justify-center">
-                        <Loader2 size={12} className="animate-spin text-zinc-700" />
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <StatusIndicator status={execution.status} />
+                        <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/5 text-white/40 border border-white/5">
+                          {execution.scope}
+                        </span>
                       </div>
-                    ) : (
-                      <>
-                        <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2 px-1">
-                          Node Activity
-                        </div>
-                        {Object.entries(currentExecution.nodeResults as Record<string, any>).map(([nodeId, result]) => (
-                          <div
-                            key={nodeId}
-                            className="p-2 rounded bg-zinc-950/50 border border-zinc-900 flex flex-col gap-1"
-                            style={{ width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              {/* Node ID — truncate long names */}
-                              <span
-                                className="text-[10px] font-semibold text-zinc-400"
-                                style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}
-                              >
-                                {nodeId}
-                              </span>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-[9px] text-zinc-700 font-mono whitespace-nowrap">
-                                  {result.executionTime}ms
-                                </span>
-                                {getStatusIcon(result.status)}
-                              </div>
-                            </div>
+                      <div className="flex items-center gap-3">
+                        {execution.durationMs && (
+                          <span className="text-[10px] text-white/20 font-mono font-bold tracking-tighter">
+                            {(execution.durationMs / 1000).toFixed(2)}s
+                          </span>
+                        )}
+                        <ChevronRight
+                          size={14}
+                          className={`text-white/10 transition-transform duration-500 ${
+                            isActive ? 'rotate-90 text-white/60' : ''
+                          }`}
+                        />
+                      </div>
+                    </div>
 
-                            {result.outputs && (
-                              <div
-                                className="text-[10px] text-zinc-500 bg-[#050505] p-1.5 rounded border border-zinc-900/50 mt-1"
-                                style={{ overflow: 'hidden', wordBreak: 'break-word' }}
-                              >
-                                {result.outputs.text && (
-                                  <span className="italic block leading-relaxed">
-                                    &quot;{result.outputs.text.substring(0, 60)}{result.outputs.text.length > 60 ? '...' : ''}&quot;
-                                  </span>
-                                )}
-                                {result.outputs.frameUrl && (
-                                  <span className="text-zinc-400 block">↳ Frame Processed</span>
-                                )}
-                                {result.outputs.croppedImageUrl && (
-                                  <span className="text-zinc-400 block">↳ Crop Created</span>
-                                )}
-                              </div>
-                            )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-white/40 group-hover:text-white/60 transition-colors">
+                        {formatDistanceToNow(new Date(execution.startedAt), { addSuffix: true })}
+                      </span>
+                      {isFetchingDetail === execution.id && (
+                        <Loader2 size={12} className="animate-spin text-purple-500" />
+                      )}
+                    </div>
+                  </button>
 
-                            {result.error && (
-                              <div
-                                className="text-[9px] text-red-400/80 bg-red-950/20 px-1.5 py-1 rounded border border-red-900/20 mt-1"
-                                style={{ overflow: 'hidden', wordBreak: 'break-word' }}
-                              >
-                                {result.error}
-                              </div>
-                            )}
+                  {/* EXPANDED DETAILS */}
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                        className="border-t border-white/5 bg-black/40"
+                      >
+                        <div className="p-4 space-y-3">
+                          <div className="flex items-center justify-between px-1">
+                            <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em]">Node Insights</span>
+                            <Zap size={10} className="text-white/10" />
                           </div>
-                        ))}
-                      </>
+
+                          {!currentExecution.nodeResults ? (
+                            <div className="py-8 flex justify-center">
+                              <Loader2 size={16} className="animate-spin text-white/10" />
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {Object.entries(currentExecution.nodeResults as Record<string, any>).map(([nodeId, result]) => (
+                                <div
+                                  key={nodeId}
+                                  className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-2 transition-colors hover:bg-white/[0.04]"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-bold text-white/60 truncate max-w-[140px]">
+                                      {nodeId.split('-')[0].toUpperCase()}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[9px] text-white/20 font-mono">
+                                        {result.executionTime}ms
+                                      </span>
+                                      <StatusDot status={result.status} />
+                                    </div>
+                                  </div>
+
+                                  {result.outputs?.text && (
+                                    <div className="text-[10px] text-white/40 bg-black/60 p-2 rounded-lg border border-white/5 italic line-clamp-2 leading-relaxed">
+                                      &quot;{result.outputs.text}&quot;
+                                    </div>
+                                  )}
+                                  
+                                  {result.error && (
+                                    <div className="text-[9px] text-rose-400 bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">
+                                      {result.error}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
                     )}
-                  </div>
-                )}
-              </div>
-            ))
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })
           )}
         </div>
       </div>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
+      `}</style>
     </div>
   );
+}
+
+// --- HELPERS ---
+
+function StatusIndicator({ status }: { status: string }) {
+  // 1. Define the shape of a single config item
+  type StatusConfig = { bg: string; dot: string; label: string; text: string };
+
+  // 2. Use Record<string, StatusConfig> to allow string indexing
+  const configMap: Record<string, StatusConfig> = {
+    running: { bg: 'bg-blue-500/10', dot: 'bg-blue-500', label: 'Running', text: 'text-blue-400' },
+    success: { bg: 'bg-emerald-500/10', dot: 'bg-emerald-500', label: 'Success', text: 'text-emerald-400' },
+    failed:  { bg: 'bg-rose-500/10', dot: 'bg-rose-500', label: 'Failed', text: 'text-rose-400' },
+  };
+
+  // 3. Fallback to a default 'idle' state if status doesn't match
+  const config = configMap[status] || { 
+    bg: 'bg-white/5', 
+    dot: 'bg-white/20', 
+    label: status.toUpperCase(), 
+    text: 'text-white/20' 
+  };
+
+  return (
+    <div className={`flex items-center gap-2 px-2 py-1 rounded-full ${config.bg} border border-white/5`}>
+      <div className={`w-1.5 h-1.5 rounded-full ${config.dot} ${status === 'running' ? 'animate-pulse' : ''}`} />
+      <span className={`text-[9px] font-bold uppercase tracking-wider ${config.text}`}>
+        {config.label}
+      </span>
+    </div>
+  );
+}
+
+function StatusDot({ status }: { status: string }) {
+  if (status === 'success') return <CheckCircle size={10} className="text-emerald-500" />;
+  if (status === 'failed') return <XCircle size={10} className="text-rose-500" />;
+  if (status === 'running') return <Loader2 size={10} className="text-blue-500 animate-spin" />;
+  return <Clock size={10} className="text-white/20" />;
 }
