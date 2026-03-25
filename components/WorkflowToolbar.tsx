@@ -162,105 +162,129 @@ export function WorkflowToolbar() {
     }
   };
 
- // ... inside your WorkflowToolbar component
-
-return (
-  <div className="h-16 flex items-center justify-between px-6 bg-[#050505] border-b border-white/5 relative z-20">
-    
-    {/* LEFT — Primary Actions */}
-    <div className="flex items-center gap-2 shrink-0">
-      <motion.div whileTap={{ scale: 0.96 }}>
-        <Button
-          onClick={() => handleExecute('full')}
-          disabled={isExecuting || nodes.length === 0}
-          className={`
-            h-10 px-5 rounded-xl font-bold transition-all flex items-center gap-2.5
-            ${isExecuting 
-              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
-              : 'bg-white text-black hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.1)]'}
-          `}
-        >
-          {isExecuting ? <Loader2 size={16} className="animate-spin" /> : <Play size={14} className="fill-current" />}
-          <span className="text-xs tracking-tight uppercase">Run Flow</span>
-        </Button>
-      </motion.div>
-
-      <div className="h-4 w-px bg-white/10 mx-2" />
-
-      <div className="flex items-center gap-1">
-        <ToolbarAction 
-          onClick={() => handleExecute('partial')}
-          disabled={isExecuting || selectedNodes.length === 0}
-          icon={Target}
-          label="Partial"
-        />
-        <ToolbarAction 
-          onClick={() => handleExecute('single')}
-          disabled={isExecuting || selectedNodes.length !== 1}
-          icon={Zap}
-          label="Single"
-        />
-      </div>
-    </div>
-
-    {/* RIGHT — Utilities & Selection Badge */}
-    <div className="flex items-center gap-2 shrink-0">
+  return (
+    // CHANGED: Added m-4, rounded-2xl, shadow-2xl, and full border to create the detached, floating island look
+    <div className="h-16 m-4 flex items-center justify-between px-6 bg-[#050505] border border-white/5 rounded-2xl shadow-2xl shadow-black/50 relative z-20">
       
-      {/* FIXED POSITIONING: Selection Badge is now part of the flex flow */}
-      <AnimatePresence mode="wait">
-        {selectedNodes.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="flex items-center gap-3 px-4 py-2 bg-white/[0.03] border border-white/10 rounded-full mr-2"
-          >
-            <span className="mono text-[10px] text-white/40 uppercase tracking-[0.2em] font-bold whitespace-nowrap">
-              {`// ${selectedNodes.length} Selected`}
-            </span>
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Undo/Redo Group */}
-      <div className="flex bg-white/[0.03] rounded-xl p-1 border border-white/5">
-        <button onClick={undo} className="p-2 text-white/30 hover:text-white transition-colors"><Undo size={14}/></button>
-        <button onClick={redo} className="p-2 text-white/30 hover:text-white transition-colors"><Redo size={14}/></button>
-      </div>
-
-      {/* Save Dialog */}
-      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogTrigger asChild>
+      {/* LEFT — Primary Actions */}
+      <div className="flex items-center gap-2 shrink-0">
+        <motion.div whileTap={{ scale: 0.96 }}>
           <Button
-            variant="outline"
-            className="h-10 px-4 rounded-xl border-white/5 bg-white/[0.02] text-white/60 hover:bg-white/[0.05] hover:text-white transition-all flex items-center gap-2"
+            onClick={() => handleExecute('full')}
+            disabled={isExecuting || nodes.length === 0}
+            className={`
+              h-10 px-5 rounded-xl font-bold transition-all flex items-center gap-2.5
+              ${isExecuting 
+                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
+                : 'bg-white text-black hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.1)]'}
+            `}
           >
-            <Save size={14} />
-            <span className="text-xs font-semibold">Save</span>
+            {isExecuting ? <Loader2 size={16} className="animate-spin" /> : <Play size={14} className="fill-current" />}
+            <span className="text-xs tracking-tight uppercase">Run Flow</span>
           </Button>
-        </DialogTrigger>
-        {/* ... Dialog Content ... */}
-      </Dialog>
+        </motion.div>
 
-      <div className="flex items-center gap-1">
-        <LoadSampleButton />
-        <ImportExportButtons />
+        <div className="h-4 w-px bg-white/10 mx-2" />
+
+        <div className="flex items-center gap-1">
+          <ToolbarAction 
+            onClick={() => handleExecute('partial')}
+            disabled={isExecuting || selectedNodes.length === 0}
+            icon={Target}
+            label="Partial"
+          />
+          <ToolbarAction 
+            onClick={() => handleExecute('single')}
+            disabled={isExecuting || selectedNodes.length !== 1}
+            icon={Zap}
+            label="Single"
+          />
+        </div>
       </div>
 
-      <div className="h-4 w-px bg-white/10 mx-2" />
+      {/* RIGHT — Utilities & Selection Badge */}
+      <div className="flex items-center gap-2 shrink-0">
+        
+        {/* FIXED POSITIONING: Selection Badge is now part of the flex flow */}
+        <AnimatePresence mode="wait">
+          {selectedNodes.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="flex items-center gap-3 px-4 py-2 bg-white/[0.03] border border-white/10 rounded-full mr-2"
+            >
+              <span className="mono text-[10px] text-white/40 uppercase tracking-[0.2em] font-bold whitespace-nowrap">
+                {`// ${selectedNodes.length} Selected`}
+              </span>
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]" />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <Button
-        variant="ghost"
-        onClick={clearWorkflow}
-        disabled={nodes.length === 0}
-        className="h-10 w-10 p-0 text-white/20 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
-      >
-        <Trash2 size={16} />
-      </Button>
+        {/* Undo/Redo Group */}
+        <div className="flex bg-white/[0.03] rounded-xl p-1 border border-white/5">
+          <button onClick={undo} className="p-2 text-white/30 hover:text-white transition-colors"><Undo size={14}/></button>
+          <button onClick={redo} className="p-2 text-white/30 hover:text-white transition-colors"><Redo size={14}/></button>
+        </div>
+
+        {/* Save Dialog */}
+        <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              className="h-10 px-4 rounded-xl border-white/5 bg-white/[0.02] text-white/60 hover:bg-white/[0.05] hover:text-white transition-all flex items-center gap-2"
+            >
+              <Save size={14} />
+              <span className="text-xs font-semibold">Save</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-[#0a0a0a] border-white/10 text-white">
+            <DialogHeader>
+              <DialogTitle>Save Workflow</DialogTitle>
+              <DialogDescription className="text-white/50">
+                Give your workflow a name to save it for later.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Input
+                  placeholder="Workflow Name"
+                  value={workflowName}
+                  onChange={(e) => setWorkflowName(e.target.value)}
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                />
+              </div>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving || !workflowName}
+                className="w-full bg-white text-black hover:bg-white/90"
+              >
+                {isSaving ? <Loader2 size={16} className="animate-spin mr-2" /> : <Save size={16} className="mr-2" />}
+                Save Workflow
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <div className="flex items-center gap-1">
+          <LoadSampleButton />
+          <ImportExportButtons />
+        </div>
+
+        <div className="h-4 w-px bg-white/10 mx-2" />
+
+        <Button
+          variant="ghost"
+          onClick={clearWorkflow}
+          disabled={nodes.length === 0}
+          className="h-10 w-10 p-0 text-white/20 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+        >
+          <Trash2 size={16} />
+        </Button>
+      </div>
     </div>
-  </div>
-);
+  );
 }
 
 // --- SUB-COMPONENT: TOOLBAR ACTION ---
