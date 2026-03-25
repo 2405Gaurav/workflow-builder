@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { useWorkflowStore } from '@/lib/store';
 import { sampleWorkflow } from '@/lib/sample-workflow';
-import { Box } from 'lucide-react'; // Changed icon to 'Box' for a more 'template/asset' feel common in Krea
+import { Box } from 'lucide-react'; 
 
 export function LoadSampleButton() {
   const { setNodes, setEdges, saveToHistory } = useWorkflowStore();
