@@ -196,9 +196,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ==============================
-    // ✅ 1. Trigger.dev (PRIMARY)
-    // ==============================
+    //  Trigger.dev (PRIMARY)
     if (process.env.TRIGGER_SECRET_KEY) {
       try {
         const run = await tasks.trigger("extract-frame", {

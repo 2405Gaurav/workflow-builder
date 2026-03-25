@@ -23,6 +23,13 @@ export function ImportExportButtons() {
 
   return (
     <>
+     <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleFileChange}
+        className="hidden"
+      />
    <Button variant="outline" onClick={exportWorkflow}
   className="h-8 px-2 text-xs bg-transparent border-white/10 text-white/70 hover:bg-white/5 hover:text-white rounded-full gap-1.5"
   title="Export JSON"
