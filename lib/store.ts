@@ -85,6 +85,63 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       edges: applyEdgeChanges(changes, get().edges),
     });
   },
+  // Add this action to your store
+  executeExtractFrame: async (nodeId: string) => {
+    const { nodes, edges, updateNodeData } = get();
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node || node.data.type !== 'extract-frame') return;
+
+    // 1. Find the connected video source
+    const incomingEdge = edges.find(e => e.target === nodeId);
+    const sourceNode = nodes.find(n => n.id === incomingEdge?.source);
+    const videoUrl = sourceNode?.data?.videoUrl || sourceNode?.data?.url;
+
+    if (!videoUrl) {
+      updateNodeData(nodeId, { status: 'error', error: 'No video source connected' });
+      return;
+    }
+
+    updateNodeData(nodeId, { status: 'running', error: undefined });
+
+    try {
+      // 2. Start the task (returns immediately with runId)
+      const response = await fetch('/api/execute/extract-frame', {
+        method: 'POST',
+        body: JSON.stringify({ videoUrl, timestamp: node.data.timestamp }),
+      });
+      
+      const { runId, error } = await response.json();
+      if (error) throw new Error(error);
+
+      // 3. Poll for result (Check every 2 seconds)
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
+        if (attempts > 30) { // Timeout after 60 seconds
+          clearInterval(poll);
+          updateNodeData(nodeId, { status: 'error', error: 'Task timed out' });
+          return;
+        }
+
+        const statusRes = await fetch(`/api/execute/status?runId=${runId}`);
+        const result = await statusRes.json();
+
+        if (result.status === 'COMPLETED') {
+          clearInterval(poll);
+          updateNodeData(nodeId, { 
+            status: 'success', 
+            extractedFrameUrl: result.output.frameUrl 
+          });
+        } else if (result.status === 'FAILED') {
+          clearInterval(poll);
+          updateNodeData(nodeId, { status: 'error', error: 'FFmpeg failed' });
+        }
+      }, 2000);
+
+    } catch (err: any) {
+      updateNodeData(nodeId, { status: 'error', error: err.message });
+    }
+  },
   exportWorkflow: () => {
   const { nodes, edges } = get();
   const workflow = {

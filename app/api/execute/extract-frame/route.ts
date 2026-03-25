@@ -178,137 +178,24 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { tasks, runs } from "@trigger.dev/sdk/v3";
-import { put } from "@vercel/blob";
+import { tasks } from "@trigger.dev/sdk/v3";
 
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { videoUrl, timestamp } = await req.json();
 
-    if (!videoUrl) {
-      return NextResponse.json(
-        { error: "Video URL is required" },
-        { status: 400 }
-      );
-    }
+    // Trigger and RETURN IMMEDIATELY
+    const run = await tasks.trigger("extract-frame", {
+      videoUrl,
+      timestamp: timestamp ?? 0,
+    });
 
-    // ==============================
-    // ✅ 1. Trigger.dev (PRIMARY)
-    // ==============================
-    if (process.env.TRIGGER_SECRET_KEY) {
-      try {
-        const run = await tasks.trigger("extract-frame", {
-          videoUrl,
-          timestamp: timestamp ?? 0,
-        });
-
-        let output: any = null;
-
-        for (let i = 0; i < 15; i++) {
-          await new Promise((r) => setTimeout(r, 1000));
-          const status = await runs.retrieve(run.id);
-
-          if (status.status === "COMPLETED") {
-            output = status.output;
-            break;
-          }
-
-          if (status.status === "FAILED") {
-            throw new Error("Trigger.dev task failed");
-          }
-        }
-
-        if (output?.frameUrl) {
-          return NextResponse.json({ frameUrl: output.frameUrl });
-        }
-      } catch (err) {
-        console.warn("Trigger.dev failed → fallback:", err);
-      }
-    }
-
-    // ==============================
-    // ✅ 2. LOCAL FFmpeg FALLBACK
-    // ==============================
-    try {
-      const ffmpeg = (await import("fluent-ffmpeg")).default;
-      const fs = await import("fs/promises");
-      const path = await import("path");
-      const os = await import("os");
-
-      ffmpeg.setFfmpegPath("ffmpeg");
-
-      const videoPath = path.join(os.tmpdir(), `video-${Date.now()}.mp4`);
-      const framePath = path.join(os.tmpdir(), `frame-${Date.now()}.jpg`);
-
-      let videoBuffer: Buffer;
-
-      // Handle base64 vs URL
-      if (videoUrl.startsWith("data:")) {
-        const match = videoUrl.match(/^data:video\/\w+;base64,(.+)$/);
-        if (!match) throw new Error("Invalid base64 video");
-        videoBuffer = Buffer.from(match[1], "base64");
-      } else {
-        const res = await fetch(videoUrl);
-        if (!res.ok) throw new Error("Failed to fetch video");
-        videoBuffer = Buffer.from(await res.arrayBuffer());
-      }
-
-      await fs.writeFile(videoPath, new Uint8Array(videoBuffer));
-
-      await new Promise<void>((resolve, reject) => {
-        ffmpeg(videoPath)
-          .screenshots({
-            timestamps: [timestamp ?? 0],
-            filename: path.basename(framePath),
-            folder: path.dirname(framePath),
-          })
-          .on("end", resolve)
-          .on("error", reject);
-      });
-
-      const frameBuffer = await fs.readFile(framePath);
-
-      // ✅ Upload frame to Vercel Blob
-      const blob = await put(
-        `frames/frame-${Date.now()}.jpg`,
-        frameBuffer,
-        {
-          access: "public",
-          contentType: "image/jpeg",
-        }
-      );
-
-      // cleanup
-      await Promise.all([
-        fs.unlink(videoPath).catch(() => {}),
-        fs.unlink(framePath).catch(() => {}),
-      ]);
-
-      return NextResponse.json({
-        frameUrl: blob.url,
-      });
-
-    } catch (fallbackError: any) {
-      console.error("FFmpeg fallback failed:", fallbackError.message);
-    }
-
-    return NextResponse.json(
-      {
-        error: "Frame extraction failed",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ runId: run.id }); // No loop here!
 
   } catch (error: any) {
-    console.error("Extract frame main error:", error);
-    return NextResponse.json(
-      { error: error.message || "Internal error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
