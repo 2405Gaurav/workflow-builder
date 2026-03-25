@@ -8,6 +8,7 @@ interface WorkflowState {
   edges: WorkflowEdge[];
   selectedNodes: string[];
   
+  
   // Workflow metadata
   currentWorkflow: Workflow | null;
   
@@ -40,6 +41,8 @@ interface WorkflowState {
   redo: () => void;
   saveToHistory: () => void;
   clearWorkflow: () => void;
+  exportWorkflow: () => void;
+importWorkflow: (json: string) => { success: boolean; error?: string };
   
   // Helpers
   getConnectedInputHandles: (nodeId: string) => Set<string>;
@@ -60,6 +63,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   setNodes: (nodes) => set({ nodes }),
 
   setEdges: (edges) => set({ edges }),
+  
 
   onNodesChange: (changes) => {
     set({
@@ -81,6 +85,40 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       edges: applyEdgeChanges(changes, get().edges),
     });
   },
+  exportWorkflow: () => {
+  const { nodes, edges } = get();
+  const workflow = {
+    version: '1.0',
+    exportedAt: new Date().toISOString(),
+    nodes,
+    edges,
+  };
+  const blob = new Blob([JSON.stringify(workflow, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `workflow-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+},
+
+importWorkflow: (json: string) => {
+  try {
+    const workflow = JSON.parse(json);
+    if (!workflow.nodes || !workflow.edges) {
+      return { success: false, error: 'Invalid workflow file' };
+    }
+    set({
+      nodes: workflow.nodes,
+      edges: workflow.edges,
+      selectedNodes: [],
+    });
+    get().saveToHistory();
+    return { success: true };
+  } catch {
+    return { success: false, error: 'Failed to parse JSON' };
+  }
+},
 
   onConnect: (connection) => {
     const { nodes, edges } = get();
