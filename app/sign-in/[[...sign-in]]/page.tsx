@@ -23,15 +23,15 @@ export default function SignInPage() {
             </div>
           </div>
 
+          {/* Welcoming headline */}
           <h2 className="text-3xl font-bold text-white leading-tight mb-4">
-            Build LLM workflows.<br />
-            <span className="text-blue-400">Ship faster.</span>
+            Oh, you&apos;re back. <br />
+            <span className="text-blue-400">Ready to build again?</span>
           </h2>
 
           <p className="text-zinc-400 text-sm leading-relaxed mb-10">
-            NextFlow is a pixel-perfect workflow canvas for LLM pipelines — 
-            connect prompts, conditions, and models visually. Powered by 
-            Gemini and built for teams who obsess over quality.
+            Your workflows are right where you left them. Sign in and pick up
+            where you stopped — or start something entirely new.
           </p>
 
           {/* Fake workflow nodes */}
@@ -57,9 +57,9 @@ export default function SignInPage() {
 
             <div className="flex items-center gap-3 bg-white/[0.04] border border-white/[0.07] rounded-lg px-4 py-3 text-sm text-zinc-300">
               <GitBranch size={14} className="text-emerald-400 shrink-0" />
-              <span>Assignment </span>
+              <span>Assignment</span>
               <span className="text-zinc-600 mx-1">→</span>
-              <span className="text-zinc-400">galaxy.ai &gt; </span>
+              <span className="text-zinc-400">galaxy.ai &gt;</span>
             </div>
 
           </div>
@@ -100,45 +100,19 @@ export default function SignInPage() {
               },
               elements: {
                 card: 'shadow-none border border-white/[0.08] bg-[#111118]',
-
-                headerTitle:
-                  'text-zinc-100 text-xl font-semibold',
-
-                headerSubtitle:
-                  'text-zinc-500',
-
-                formFieldLabel:
-                  'text-zinc-400 text-sm',
-
-                formFieldInput:
-                  'bg-[#18181f] border border-white/10 text-zinc-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-zinc-600',
-
-                formButtonPrimary:
-                  'bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors',
-
-                footerActionText:
-                  'text-zinc-500',
-
-                footerActionLink:
-                  'text-blue-400 font-medium hover:text-blue-300',
-
-                socialButtonsBlockButton:
-                  'bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] text-zinc-300',
-
-                dividerLine:
-                  'bg-white/10',
-
-                dividerText:
-                  'text-zinc-600',
-
-                alertText:
-                  'text-red-400',
-
-                identityPreviewText:
-                  'text-zinc-300',
-
-                identityPreviewEditButton:
-                  'text-blue-400',
+                headerTitle: 'text-zinc-100 text-xl font-semibold',
+                headerSubtitle: 'text-zinc-500',
+                formFieldLabel: 'text-zinc-400 text-sm',
+                formFieldInput: 'bg-[#18181f] border border-white/10 text-zinc-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-zinc-600',
+                formButtonPrimary: 'bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors',
+                footerActionText: 'text-zinc-500',
+                footerActionLink: 'text-blue-400 font-medium hover:text-blue-300',
+                socialButtonsBlockButton: 'bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] text-zinc-300',
+                dividerLine: 'bg-white/10',
+                dividerText: 'text-zinc-600',
+                alertText: 'text-red-400',
+                identityPreviewText: 'text-zinc-300',
+                identityPreviewEditButton: 'text-blue-400',
               },
             }}
           />
