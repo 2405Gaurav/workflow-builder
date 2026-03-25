@@ -3,12 +3,8 @@ import { auth } from '@clerk/nextjs/server';
 import { put } from '@vercel/blob';
 import { prisma } from '@/lib/db';
 
-// ✅ Disable default body parser — required for large file streaming
-export const config = {
-  api: { bodyParser: false },
-};
-
-// ✅ Increase Vercel function max duration for uploads
+// ✅ App Router equivalents (replaces Pages Router config export)
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
@@ -25,12 +21,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // ✅ Validate file type
     if (!file.type.startsWith('video/')) {
       return NextResponse.json({ error: 'Only video files are allowed' }, { status: 400 });
     }
 
-    // ✅ Validate file size (100MB limit)
     const MAX_SIZE = 100 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
@@ -39,7 +33,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ Stream directly to Vercel Blob (no DB bloat)
     const blob = await put(
       `uploads/${userId}/${Date.now()}-${file.name}`,
       file.stream(),
@@ -49,14 +42,13 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // ✅ Only store metadata (URL reference) in DB — NOT the file itself
     const upload = await prisma.mediaUpload.create({
       data: {
         userId,
         fileName: file.name || 'untitled.mp4',
         mimeType: file.type || 'video/mp4',
         sizeBytes: file.size,
-        dataUrl: blob.url,  // just the URL, not base64
+        dataUrl: blob.url,
       },
     });
 
