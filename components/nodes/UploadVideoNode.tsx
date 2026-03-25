@@ -5,6 +5,7 @@ import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { UploadVideoNodeData } from '@/lib/types';
 import { useWorkflowStore } from '@/lib/store';
 import { Upload, X, Loader2, Film, AlertCircle } from 'lucide-react';
+import { upload } from '@vercel/blob/client';
 
 export const UploadVideoNode = memo(({ id, data }: NodeProps<Node<UploadVideoNodeData>>) => {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
@@ -15,23 +16,31 @@ export const UploadVideoNode = memo(({ id, data }: NodeProps<Node<UploadVideoNod
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Client-side guards (no need to hit server for these)
+    if (!file.type.startsWith('video/')) {
+      updateNodeData(id, { status: 'error', error: 'Only video files are allowed' });
+      return;
+    }
+    if (file.size > 100 * 1024 * 1024) {
+      updateNodeData(id, { status: 'error', error: 'File too large. Maximum size is 100MB.' });
+      return;
+    }
+
     updateNodeData(id, { status: 'running' });
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('/api/upload/video', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error('Upload failed');
-
-      const { url } = await response.json();
+      // 👇 File goes directly browser → Vercel Blob, API route only issues token
+      const blob = await upload(
+        `uploads/${Date.now()}-${file.name}`,
+        file,
+        {
+          access: 'public',
+          handleUploadUrl: '/api/upload/video',
+        }
+      );
 
       updateNodeData(id, {
-        videoUrl: url,
+        videoUrl: blob.url,
         videoPreview: URL.createObjectURL(file),
         status: 'success',
       });

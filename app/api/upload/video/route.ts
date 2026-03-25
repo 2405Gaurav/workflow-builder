@@ -1,64 +1,58 @@
+// app/api/upload/video/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { put } from '@vercel/blob';
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { prisma } from '@/lib/db';
 
-// ✅ App Router equivalents (replaces Pages Router config export)
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = (await req.json()) as HandleUploadBody;
+
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
-
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
-    }
-
-    if (!file.type.startsWith('video/')) {
-      return NextResponse.json({ error: 'Only video files are allowed' }, { status: 400 });
-    }
-
-    const MAX_SIZE = 100 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json(
-        { error: 'File too large. Maximum size is 100MB.' },
-        { status: 413 }
-      );
-    }
-
-    const blob = await put(
-      `uploads/${userId}/${Date.now()}-${file.name}`,
-      file.stream(),
-      {
-        access: 'public',
-        contentType: file.type || 'video/mp4',
-      }
-    );
-
-    const upload = await prisma.mediaUpload.create({
-      data: {
-        userId,
-        fileName: file.name || 'untitled.mp4',
-        mimeType: file.type || 'video/mp4',
-        sizeBytes: file.size,
-        dataUrl: blob.url,
+    const jsonResponse = await handleUpload({
+      body,
+      request: req,
+      onBeforeGenerateToken: async (pathname, clientPayload) => {
+        // Validate file type before generating upload token
+        if (!pathname.match(/\.(mp4|mov|avi|webm|mkv)$/i)) {
+          throw new Error('Only video files are allowed');
+        }
+        return {
+          allowedContentTypes: ['video/mp4', 'video/mov', 'video/avi', 'video/webm', 'video/x-matroska'],
+          maximumSizeInBytes: 100 * 1024 * 1024, // 100MB
+          tokenPayload: JSON.stringify({ userId , sizeBytes: Number(clientPayload)}),
+        };
       },
+    onUploadCompleted: async ({ blob, tokenPayload }) => {
+  const parsed = JSON.parse(tokenPayload!);
+  const userId = parsed.userId as string;
+  const sizeBytes = typeof parsed.sizeBytes === 'number' && !isNaN(parsed.sizeBytes) 
+    ? parsed.sizeBytes 
+    : 0;
+
+  await prisma.mediaUpload.create({
+    data: {
+      userId,
+      fileName: blob.pathname.split('/').pop() || 'untitled.mp4',
+      mimeType: blob.contentType || 'video/mp4',
+      sizeBytes: sizeBytes,
+      dataUrl: blob.url,
+    },
+  });
+},
     });
 
-    return NextResponse.json({ url: blob.url, id: upload.id });
-
+    return NextResponse.json(jsonResponse);
   } catch (error) {
-    console.error('Video upload error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Upload failed' },
-      { status: 500 }
+      { status: 400 }
     );
   }
 }
