@@ -7,8 +7,9 @@ import { NodeSidebar } from '@/components/NodeSidebar';
 import { HistorySidebar } from '@/components/HistorySidebar';
 import { WorkflowToolbar } from '@/components/WorkflowToolbar';
 import { UserButton } from '@clerk/nextjs';
+import Image from 'next/image';
 import {
-  Sparkles,
+
   ChevronLeft,
   ChevronRight,
   PanelLeft,
@@ -35,16 +36,18 @@ export default function WorkflowPage() {
         {/* Left: Logo + Badge */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{
-                background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(168, 85, 247, 0.2))',
-                border: '1px solid rgba(124, 58, 237, 0.3)',
-              }}
-            >
-              <Sparkles size={14} className="text-purple-400" />
-            </div>
-            <h1 className="text-sm font-bold gradient-text">NextFlow</h1>
+            
+<div className="flex items-center gap-2 pt-1">
+  <Image
+    src="/logo.png"
+    alt="NextFlow"
+    width={150}
+    height={60}
+    className="object-contain"
+    style={{ filter: 'brightness(1.2)' }}
+  />
+</div>
+            
           </div>
           <span
             className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full text-gray-500 font-medium"

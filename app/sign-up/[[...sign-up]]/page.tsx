@@ -1,6 +1,6 @@
 import { SignUp } from '@clerk/nextjs';
-import { Sparkles, Zap, Brain, GitBranch, Layers } from 'lucide-react';
-
+import {  Zap, Brain, GitBranch, Layers } from 'lucide-react';
+import Image from 'next/image';
 export default function SignUpPage() {
   return (
     <div className="min-h-screen flex bg-[#0a0a0f] font-[Space_Grotesk]">
@@ -76,14 +76,16 @@ export default function SignUpPage() {
         <div className="w-full max-w-md">
 
           {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-9 h-9 bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-lg flex items-center justify-center">
-              <Sparkles size={16} />
-            </div>
-            <h1 className="text-xl font-semibold text-white tracking-tight">
-              NextFlow
-            </h1>
-          </div>
+       <div className="flex items-center gap-2 ">
+         <Image
+           src="/logo.png"
+           alt="NextFlow"
+           width={180}
+           height={60}
+           className="object-contain"
+           style={{ filter: 'brightness(1.2)' }}
+         />
+       </div>
 
           <SignUp
             appearance={{
