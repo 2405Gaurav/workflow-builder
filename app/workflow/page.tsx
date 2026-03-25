@@ -1,111 +1,45 @@
 'use client';
 
-import { useState } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { WorkflowCanvas } from '@/components/WorkflowCanvas';
 import { NodeSidebar } from '@/components/NodeSidebar';
 import { HistorySidebar } from '@/components/HistorySidebar';
 import { WorkflowToolbar } from '@/components/WorkflowToolbar';
-import { UserButton } from '@clerk/nextjs';
-
-import Navbar from '@/components/Navbar';
-import Image from 'next/image';
-import {
-
-  ChevronLeft,
-  ChevronRight,
-  PanelLeft,
-  PanelRight,
-  Globe,
-  Github,
-} from 'lucide-react';
 
 export default function WorkflowPage() {
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
-
   return (
-    <div className="h-screen flex flex-col" style={{ background: '#0a0a0f' }}>
-  
+    <div className="h-screen flex flex-col bg-[#050505] overflow-hidden">
       
-      {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden relative">
+      {/* 1. TOP TOOLBAR (Full Width) */}
+      <WorkflowToolbar />
 
-        {/* LEFT SIDEBAR (Node Library) */}
-        <div
-          className={`relative transition-all duration-300 ease-in-out flex shrink-0 ${
-            leftOpen ? 'w-64' : 'w-0'
-          }`}
-        >
-          <div className="min-w-[16rem] h-full overflow-hidden">
-            <NodeSidebar />
-          </div>
+      {/* 2. MAIN LAYOUT AREA */}
+      <div className="flex-1 flex overflow-hidden">
 
-          {/* Left Toggle Button */}
-          <button
-            onClick={() => setLeftOpen(!leftOpen)}
-            className={`absolute top-1/2 -translate-y-1/2 z-[60] flex flex-col items-center justify-center gap-4 py-8 transition-all group ${
-              leftOpen
-                ? '-right-4 w-6 h-12 rounded-full glass border border-white/10'
-                : '-right-8 w-8 h-48 rounded-r-2xl bg-[#12121a] border-y border-r border-purple-500/30 shadow-[4px_0_15px_rgba(124,58,237,0.1)]'
-            }`}
-          >
-            {leftOpen ? (
-              <ChevronLeft size={16} className="text-gray-400 group-hover:text-purple-400" />
-            ) : (
-              <>
-                <PanelLeft size={18} className="text-purple-400" />
-                <span className="[writing-mode:vertical-lr] rotate-180 text-[11px] font-black tracking-[0.2em] text-gray-400 uppercase group-hover:text-purple-300 transition-colors">
-                  NODE LIBRARY
-                </span>
-              </>
-            )}
-          </button>
-        </div>
+        {/* LEFT SIDEBAR (Internal Collapsible Logic) */}
+        <NodeSidebar />
 
-        {/* CENTER CANVAS */}
-        <div className="flex-1 flex flex-col relative overflow-hidden">
-          <WorkflowToolbar />
-          <div className="flex-1">
-            <ReactFlowProvider>
-              <WorkflowCanvas />
-            </ReactFlowProvider>
-          </div>
-        </div>
+        {/* CENTER CANVAS (Expands to fill remaining space) */}
+        <main className="flex-1 relative overflow-hidden bg-[#050505]">
+          <ReactFlowProvider>
+            <WorkflowCanvas />
+          </ReactFlowProvider>
+        </main>
 
-        {/* RIGHT SIDEBAR (Execution History) */}
-        <div
-          className={`relative transition-all duration-300 ease-in-out flex shrink-0 ${
-            rightOpen ? 'w-80' : 'w-0'
-          }`}
-        >
-          {/* Right Toggle Button */}
-          <button
-            onClick={() => setRightOpen(!rightOpen)}
-            className={`absolute top-1/2 -translate-y-1/2 z-[60] flex flex-col items-center justify-center gap-4 py-8 transition-all group ${
-              rightOpen
-                ? '-left-4 w-6 h-12 rounded-full glass border border-white/10'
-                : '-left-8 w-8 h-48 rounded-l-2xl bg-[#12121a] border-y border-l border-purple-500/30 shadow-[-4px_0_15px_rgba(124,58,237,0.1)]'
-            }`}
-          >
-            {rightOpen ? (
-              <ChevronRight size={16} className="text-gray-400 group-hover:text-purple-400" />
-            ) : (
-              <>
-                <PanelRight size={18} className="text-purple-400" />
-                <span className="[writing-mode:vertical-lr] rotate-180 text-[11px] font-black tracking-[0.2em] text-gray-400 uppercase group-hover:text-purple-300 transition-colors">
-                  HISTORY
-                </span>
-              </>
-            )}
-          </button>
-
-          <div className="min-w-[20rem] h-full overflow-hidden">
-            <HistorySidebar />
-          </div>
-        </div>
+        {/* RIGHT SIDEBAR (Internal Collapsible Logic) */}
+        <HistorySidebar />
 
       </div>
+
+      {/* GLOBAL BACKGROUND STYLE */}
+      <style jsx global>{`
+        html, body {
+          background-color: #050505;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+        }
+      `}</style>
     </div>
   );
 }
