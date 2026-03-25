@@ -23,31 +23,21 @@ export function ImportExportButtons() {
 
   return (
     <>
-      <Button
-        variant="outline"
-        onClick={exportWorkflow}
-        className="h-9 px-4 text-xs bg-transparent border-white/10 text-white/70 hover:bg-white/5 hover:text-white rounded-full gap-2"
-      >
-        <Download size={14} />
-        Export
-      </Button>
+   <Button variant="outline" onClick={exportWorkflow}
+  className="h-8 px-2 text-xs bg-transparent border-white/10 text-white/70 hover:bg-white/5 hover:text-white rounded-full gap-1.5"
+  title="Export JSON"
+>
+  <Download size={13} />
+  <span className="hidden lg:inline">Export</span>
+</Button>
 
-      <Button
-        variant="outline"
-        onClick={() => fileInputRef.current?.click()}
-        className="h-9 px-4 text-xs bg-transparent border-white/10 text-white/70 hover:bg-white/5 hover:text-white rounded-full gap-2"
-      >
-        <Upload size={14} />
-        Import
-      </Button>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json"
-        onChange={handleFileChange}
-        className="hidden"
-      />
+<Button variant="outline" onClick={() => fileInputRef.current?.click()}
+  className="h-8 px-2 text-xs bg-transparent border-white/10 text-white/70 hover:bg-white/5 hover:text-white rounded-full gap-1.5"
+  title="Import JSON"
+>
+  <Upload size={13} />
+  <span className="hidden lg:inline">Import</span>
+</Button>
     </>
   );
 }

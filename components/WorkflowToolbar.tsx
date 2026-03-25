@@ -166,120 +166,126 @@ export function WorkflowToolbar() {
     }
   };
 
-  return (
-    <div className="h-14 flex items-center justify-between px-4 gap-4 bg-[#0a0a0a]/80 border-b border-white/5 backdrop-blur-xl">
-      <div className="flex items-center gap-2">
-        <Button
-          onClick={() => handleExecute('full')}
-          disabled={isExecuting || nodes.length === 0}
-          className="h-9 px-4 text-xs font-bold bg-[#eab308] hover:bg-[#facc15] text-black gap-2 rounded-full transition-all shadow-[0_0_15px_rgba(234,179,8,0.2)] disabled:opacity-50"
-        >
-          {isExecuting ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Play size={16} fill="currentColor" />
-          )}
-          RUN WORKFLOW
-        </Button>
+ return (
+  <div className="h-14 flex items-center justify-between px-3 gap-2 bg-[#0a0a0a]/80 border-b border-white/5 backdrop-blur-xl min-w-0">
+    
+    {/* LEFT — Run buttons */}
+    <div className="flex items-center gap-1 shrink-0">
+      <Button
+        onClick={() => handleExecute('full')}
+        disabled={isExecuting || nodes.length === 0}
+        className="h-8 px-3 text-xs font-bold bg-[#eab308] hover:bg-[#facc15] text-black gap-1.5 rounded-full transition-all shadow-[0_0_15px_rgba(234,179,8,0.2)] disabled:opacity-50"
+      >
+        {isExecuting ? (
+          <Loader2 size={14} className="animate-spin" />
+        ) : (
+          <Play size={14} fill="currentColor" />
+        )}
+        <span className="hidden sm:inline">RUN</span>
+      </Button>
 
-        <div className="h-6 w-[1px] bg-white/10 mx-1" />
+      <div className="h-5 w-[1px] bg-white/10 mx-0.5" />
 
-        <Button
-          variant="ghost"
-          onClick={() => handleExecute('partial')}
-          disabled={isExecuting || selectedNodes.length === 0}
-          className="h-9 px-3 text-xs text-white/50 hover:text-white hover:bg-white/5 gap-2 rounded-full"
-        >
-          <Target size={15} />
-          Partial
-        </Button>
+      <Button
+        variant="ghost"
+        onClick={() => handleExecute('partial')}
+        disabled={isExecuting || selectedNodes.length === 0}
+        className="h-8 px-2 text-xs text-white/50 hover:text-white hover:bg-white/5 gap-1.5 rounded-full"
+        title="Run selected nodes"
+      >
+        <Target size={14} />
+        <span className="hidden lg:inline">Partial</span>
+      </Button>
 
-        <Button
-          variant="ghost"
-          onClick={() => handleExecute('single')}
-          disabled={isExecuting || selectedNodes.length !== 1}
-          className="h-9 px-3 text-xs text-white/50 hover:text-white hover:bg-white/5 gap-2 rounded-full"
-        >
-          <Zap size={15} />
-          Single
-        </Button>
-      </div>
-
-      {selectedNodes.length > 0 && (
-        <div className="absolute left-1/2 -translate-x-1/2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] uppercase tracking-tighter text-white/40 font-medium">
-          {selectedNodes.length} Nodes Selected
-        </div>
-      )}
-
-      <div className="flex items-center gap-1">
-        <div className="flex bg-white/5 rounded-full p-0.5 mr-2">
-          <Button
-            variant="ghost"
-            onClick={undo}
-            className="h-8 w-8 p-0 text-white/40 hover:text-white hover:bg-white/10 rounded-full"
-          >
-            <Undo size={14} />
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={redo}
-            className="h-8 w-8 p-0 text-white/40 hover:text-white hover:bg-white/10 rounded-full"
-          >
-            <Redo size={14} />
-          </Button>
-        </div>
-
-        <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              variant="outline"
-              className="h-9 px-4 text-xs bg-transparent border-white/10 text-white/70 hover:bg-white/5 hover:text-white rounded-full gap-2"
-            >
-              <Save size={14} />
-              {currentWorkflow ? 'Update' : 'Save'}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-[#0f0f0f] border-white/10 rounded-3xl sm:max-w-md shadow-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-white tracking-tight">Save Workflow</DialogTitle>
-              <DialogDescription className="text-white/40">
-                Sync your creation to the cloud.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <Input
-                placeholder="Name your workflow..."
-                value={workflowName}
-                onChange={(e) => setWorkflowName(e.target.value)}
-                className="h-12 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-white/20 focus:ring-1 focus:ring-[#eab308]/50 focus:border-[#eab308]/50"
-              />
-              <Button
-                onClick={handleSave}
-                disabled={isSaving || !workflowName}
-                className="w-full h-12 bg-[#eab308] hover:bg-[#facc15] text-black font-bold rounded-xl transition-all shadow-lg"
-              >
-                {isSaving ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  'Confirm & Save'
-                )}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <LoadSampleButton />
-        <ImportExportButtons /> 
-
-        <Button
-          variant="ghost"
-          onClick={clearWorkflow}
-          disabled={nodes.length === 0}
-          className="h-9 w-9 p-0 text-white/20 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-colors"
-        >
-          <Trash2 size={16} />
-        </Button>
-      </div>
+      <Button
+        variant="ghost"
+        onClick={() => handleExecute('single')}
+        disabled={isExecuting || selectedNodes.length !== 1}
+        className="h-8 px-2 text-xs text-white/50 hover:text-white hover:bg-white/5 gap-1.5 rounded-full"
+        title="Run single node"
+      >
+        <Zap size={14} />
+        <span className="hidden lg:inline">Single</span>
+      </Button>
     </div>
-  );
+
+    {/* CENTER — Selected nodes badge */}
+    {selectedNodes.length > 0 && (
+      <div className="absolute left-1/2 -translate-x-1/2 px-2 py-0.5 bg-white/5 border border-white/10 rounded-full text-[9px] uppercase tracking-tighter text-white/40 font-medium whitespace-nowrap">
+        {selectedNodes.length} Selected
+      </div>
+    )}
+
+    {/* RIGHT — Actions */}
+    <div className="flex items-center gap-1 shrink-0">
+      {/* Undo/Redo */}
+      <div className="flex bg-white/5 rounded-full p-0.5">
+        <Button
+          variant="ghost"
+          onClick={undo}
+          className="h-7 w-7 p-0 text-white/40 hover:text-white hover:bg-white/10 rounded-full"
+          title="Undo"
+        >
+          <Undo size={13} />
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={redo}
+          className="h-7 w-7 p-0 text-white/40 hover:text-white hover:bg-white/10 rounded-full"
+          title="Redo"
+        >
+          <Redo size={13} />
+        </Button>
+      </div>
+
+      {/* Save */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 px-2 text-xs bg-transparent border-white/10 text-white/70 hover:bg-white/5 hover:text-white rounded-full gap-1.5"
+            title="Save workflow"
+          >
+            <Save size={13} />
+            <span className="hidden lg:inline">{currentWorkflow ? 'Update' : 'Save'}</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="bg-[#0f0f0f] border-white/10 rounded-3xl sm:max-w-md shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white tracking-tight">Save Workflow</DialogTitle>
+            <DialogDescription className="text-white/40">Sync your creation to the cloud.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              placeholder="Name your workflow..."
+              value={workflowName}
+              onChange={(e) => setWorkflowName(e.target.value)}
+              className="h-12 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-white/20 focus:ring-1 focus:ring-[#eab308]/50 focus:border-[#eab308]/50"
+            />
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || !workflowName}
+              className="w-full h-12 bg-[#eab308] hover:bg-[#facc15] text-black font-bold rounded-xl transition-all shadow-lg"
+            >
+              {isSaving ? <Loader2 size={18} className="animate-spin" /> : 'Confirm & Save'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <LoadSampleButton />
+      <ImportExportButtons />
+
+      <Button
+        variant="ghost"
+        onClick={clearWorkflow}
+        disabled={nodes.length === 0}
+        className="h-8 w-8 p-0 text-white/20 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-colors"
+        title="Clear canvas"
+      >
+        <Trash2 size={14} />
+      </Button>
+    </div>
+  </div>
+);
 }
