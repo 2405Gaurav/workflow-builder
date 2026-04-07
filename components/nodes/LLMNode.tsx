@@ -27,6 +27,7 @@ export const LLMNode = memo(({ id, data }: NodeProps<Node<LLMNodeData>>) => {
   const deleteNode = useWorkflowStore((state) => state.deleteNode);
   const isInputConnected = useWorkflowStore((state) => state.isInputConnected);
   const [copied, setCopied] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
 
   const textConnected = isInputConnected(id, 'text-input');
   const outputUrl = useMemo(() => {
@@ -176,7 +177,7 @@ export const LLMNode = memo(({ id, data }: NodeProps<Node<LLMNodeData>>) => {
 
                 {/* if the output contains a link, surface it as a clean URL row (open + copy) */}
                 {outputUrl && (
-                  <div className="flex items-center gap-1.5 px-3 py-2 bg-[#0d0d0d] border border-white/5 rounded-lg">
+                  <div className="flex items-center gap-1.5 px-3 py-2 bg-[#0d0d0d] border border-white/5 rounded-lg group/url">
                     <a
                       href={outputUrl}
                       target="_blank"
@@ -195,7 +196,7 @@ export const LLMNode = memo(({ id, data }: NodeProps<Node<LLMNodeData>>) => {
                         setCopied(true);
                         setTimeout(() => setCopied(false), 2000);
                       }}
-                      className="shrink-0 p-1 text-white/25 hover:text-white/70 hover:bg-white/5 rounded transition-all"
+                      className="shrink-0 p-1 text-white/25 hover:text-white/70 hover:bg-white/5 rounded transition-all opacity-0 group-hover/url:opacity-100"
                       title="Copy URL"
                     >
                       {copied ? <Check size={10} className="text-emerald-400" /> : <Copy size={10} />}
@@ -204,11 +205,23 @@ export const LLMNode = memo(({ id, data }: NodeProps<Node<LLMNodeData>>) => {
                 )}
 
                 <div
-                  className={`nodrag nopan text-[12px] bg-[#0d0d0d] border border-emerald-500/10 p-3 rounded-lg
+                  className={`nodrag nopan text-[12px] bg-[#0d0d0d] border border-emerald-500/10 p-3 rounded-lg relative group/output
                     whitespace-pre-wrap text-white/80 leading-relaxed shadow-inner
                     max-h-[300px] overflow-y-auto ${kreaScrollbar}`}
                   onWheelCapture={(e) => e.stopPropagation()}
                 >
+                  {/* copy button (appears on hover so it doesn't clutter the node) */}
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(data.result || '');
+                      setCopiedText(true);
+                      setTimeout(() => setCopiedText(false), 2000);
+                    }}
+                    className="absolute top-2 right-2 p-1 rounded bg-black/40 border border-white/10 text-white/40 hover:text-white/80 hover:bg-black/60 transition-all opacity-0 group-hover/output:opacity-100"
+                    title="Copy output"
+                  >
+                    {copiedText ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                  </button>
                   {data.result}
                 </div>
               </div>
@@ -247,13 +260,6 @@ export const LLMNode = memo(({ id, data }: NodeProps<Node<LLMNodeData>>) => {
           style={{ top: '220px' }}
           className="!w-3.5 !h-3.5 !-left-2 !bg-[#eab308] !border-2 !border-[#1a1a1a] !rounded-full !z-30"
         />
-        <Handle
-  type="target"
-  position={Position.Left}
-  id="image-input"
-  style={{ top: '220px' }}
-  className="!w-3.5 !h-3.5 !-left-2 !bg-[#eab308] !border-2 !border-[#1a1a1a] !rounded-full !z-30"
-/>
 <Handle
   type="target"
   position={Position.Left}

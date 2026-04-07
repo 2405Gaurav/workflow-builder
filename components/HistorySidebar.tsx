@@ -74,12 +74,12 @@ export function HistorySidebar() {
 
   return (
     // outer shell - gives the panel some breathing room so it floats nicely
-    <div className="h-full flex items-stretch py-3 pr-3 pl-0">
+    <div className="h-full max-h-[calc(100vh-24px)] flex items-stretch py-3 pr-3 pl-0">
       <motion.div
         initial={false}
         animate={{ width: isCollapsed ? 64 : 240 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="h-full flex flex-col overflow-hidden select-none relative z-30 rounded-2xl"
+        className="h-full max-h-[calc(100vh-24px)] flex flex-col overflow-hidden select-none relative z-30 rounded-2xl"
         style={{
           background: 'rgba(10, 10, 14, 0.85)',
           border: '1px solid rgba(255,255,255,0.07)',
@@ -252,21 +252,23 @@ export function HistorySidebar() {
                               <Loader2 size={13} className="animate-spin text-white/10" />
                             </div>
                           ) : (
-                            Object.entries(activeExecution.nodeResults as Record<string, any>).map(([nodeId, result]) => (
-                              <div
-                                key={nodeId}
-                                className="px-2.5 py-2 rounded-lg flex items-center justify-between"
-                                style={{
-                                  background: 'rgba(255,255,255,0.02)',
-                                  border: '1px solid rgba(255,255,255,0.04)',
-                                }}
-                              >
-                                <span className="text-[10px] font-bold text-white/35 truncate">
-                                  {nodeId.split('-')[0].toUpperCase()}
-                                </span>
-                                <StatusDot status={result.status} />
-                              </div>
-                            ))
+                            <div className="max-h-44 overflow-y-auto pr-1 custom-scrollbar space-y-1.5">
+                              {Object.entries(activeExecution.nodeResults as Record<string, any>).map(([nodeId, result]) => (
+                                <div
+                                  key={nodeId}
+                                  className="px-2.5 py-2 rounded-lg flex items-center justify-between"
+                                  style={{
+                                    background: 'rgba(255,255,255,0.02)',
+                                    border: '1px solid rgba(255,255,255,0.04)',
+                                  }}
+                                >
+                                  <span className="text-[10px] font-bold text-white/35 truncate">
+                                    {nodeId.split('-')[0].toUpperCase()}
+                                  </span>
+                                  <StatusDot status={result.status} />
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </motion.div>
                       )}

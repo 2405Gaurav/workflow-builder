@@ -1,8 +1,7 @@
 'use client';
 
-// workflow toolbar - the floating top bar in the editor
-// has run buttons, save dialog, undo/redo, and import/export
-// also shows a back link to dashboard so ppl can navigate easily
+// workflow toolbar, its the lil control deck at the top
+// run / save / undo redo and a way to get back to dashbord
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -58,16 +57,14 @@ export function WorkflowToolbar() {
   const [workflowName, setWorkflowName] = useState('');
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
-  // sync workflow name from store when it changes
-  // this way when you load a saved workflow the name shows up in the save dialog
+  // keep the save dialog name in sync, otherwise it feels kinda janky
   useEffect(() => {
     if (currentWorkflow?.name) {
       setWorkflowName(currentWorkflow.name);
     }
   }, [currentWorkflow]);
 
-  // execute the workflow - can be full, partial (selected nodes), or single node
-  // creates an execution record in the db first, then runs the engine
+  // run the flow. we create a run record first so history shows it right away
   const handleExecute = async (scope: 'full' | 'partial' | 'single') => {
     if (!user || isExecuting) return;
     setIsExecuting(true);
@@ -150,9 +147,7 @@ export function WorkflowToolbar() {
     }
   };
 
-  // save the current workflow to the database
-  // if we alredy have a current workflow (loaded from dashboard), it updates
-  // otherwise it creates a new one
+  // save current flow. update if we loaded one, otherwise create a fresh record
   const handleSave = async () => {
     if (!user || !workflowName) return;
     setIsSaving(true);

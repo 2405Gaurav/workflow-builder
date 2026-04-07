@@ -60,7 +60,7 @@ export function WorkflowCanvas() {
     addNode,
   } = useWorkflowStore();
 
-  // 1. DYNAMIC CONNECTION VALIDATION
+  // connection guard so you cant wire up random stuff and then wonder why it broke later
   const isValidConnection = useCallback((connection: any) => {
     const source = nodes.find(n => n.id === connection.source);
     const target = nodes.find(n => n.id === connection.target);
@@ -69,7 +69,7 @@ export function WorkflowCanvas() {
     const sourceOutput = source.data.outputType;
     const targetHandle = connection.targetHandle || ''; 
     
-    // Check if output matches the specific input handle requirement
+    // quick check on handle intent
     if (targetHandle.includes('image') && sourceOutput !== 'image') return false;
     if (targetHandle.includes('video') && sourceOutput !== 'video') return false;
     if (targetHandle.includes('text') && sourceOutput !== 'text') return false;
@@ -77,7 +77,7 @@ export function WorkflowCanvas() {
     return true;
   }, [nodes]);
 
-  // 2. DRAG & DROP LOGIC
+  // drag drop nodes onto the canvas, pretty standard reactflow thing
   const onDrop = useCallback((event: DragEvent) => {
     event.preventDefault();
     const type = event.dataTransfer.getData('application/reactflow-type') as NodeDataType;
@@ -119,7 +119,7 @@ export function WorkflowCanvas() {
           color="rgba(255, 255, 255, 0.07)"
         />
 
-        {/* ── FIXED MINIMAP ── */}
+        {/* minimap stays pinned so you dont loose ur place */}
         <MiniMap 
           className="!bg-[#080808]/80 backdrop-blur-xl !rounded-2xl border border-white/5 shadow-2xl transition-all duration-300"
           style={{ 
