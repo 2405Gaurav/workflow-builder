@@ -1,17 +1,25 @@
 'use client';
 
+// workflow editor page - the main canvas where users build there pipelines
+// if theres an id in the url we load that saved workflow, otherwise blank canvas
+// kinda the heart of the whole app tbh
+
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ReactFlowProvider } from '@xyflow/react';
 import { motion, Variants } from 'framer-motion';
 import { WorkflowCanvas } from '@/components/WorkflowCanvas';
 import { NodeSidebar } from '@/components/NodeSidebar';
 import { HistorySidebar } from '@/components/HistorySidebar';
 import { WorkflowToolbar } from '@/components/WorkflowToolbar';
+import { useWorkflowStore } from '@/lib/store';
+import { Loader2 } from 'lucide-react';
 
-// Premium cinematic easing (Apple-style buttery deceleration)
-const elegantEase: [number, number, number, number] =[0.16, 1, 0.3, 1];
+// smooth apple-esque easing curve, makes everything feel premium
+const elegantEase: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 // ── 1. CANVAS ENTRANCE (Deep Focus Effect) ──
-// Starts slightly large, dark, and blurred, then settles into place.
+// starts slightly zoomed in and blurry, then settles in - looks realy cinematic
 const canvasVariants: Variants = {
   initial: { 
     opacity: 0, 
@@ -27,6 +35,7 @@ const canvasVariants: Variants = {
 };
 
 // ── 2. UI STAGGER LAYOUT ──
+// staggers the UI panels so they dont all pop in at once
 const uiLayoutVariants: Variants = {
   initial: { opacity: 1 },
   animate: {
@@ -39,7 +48,7 @@ const uiLayoutVariants: Variants = {
 };
 
 // ── 3. INDIVIDUAL UI PANELS ──
-// They glide in with a subtle unblur, making them feel like glass panels.
+// they glide in with a subtle unblur, kinda like glass panels materializing
 const topBarVariants: Variants = {
   initial: { opacity: 0, y: -20, filter: 'blur(8px)' },
   animate: { 
@@ -71,9 +80,81 @@ const sideBarRightVariants: Variants = {
 };
 
 export default function WorkflowPage() {
+  const searchParams = useSearchParams();
+  const workflowId = searchParams.get('id');
+  const [isLoadingWorkflow, setIsLoadingWorkflow] = useState(false);
+
+  // grab store actions we need for loading a saved worflow
+  const { setNodes, setEdges, setCurrentWorkflow, saveToHistory, clearWorkflow } = useWorkflowStore();
+
+  // if theres a workflow id in the url, fetch it from the api and hydrate the canvas
+  // this is what makes the dashboard -> editor flow acutally work
+  useEffect(() => {
+    // super important: when there's NO id, we want a *real* blank canvas.
+    // zustand store sticks around between route changes, so without this,
+    // "New Workflow" can accidentally show the last opened saved workflow.
+    if (!workflowId) {
+      clearWorkflow();
+      setCurrentWorkflow(null);
+      // seed history so undo doesn't bring back an old workflow
+      setTimeout(() => saveToHistory(), 50);
+      return;
+    }
+
+    const loadSavedWorkflow = async () => {
+      setIsLoadingWorkflow(true);
+      try {
+        const res = await fetch(`/api/workflows/${workflowId}`);
+        if (!res.ok) {
+          console.error('Couldnt load workflow, server returned:', res.status);
+          return;
+        }
+
+        const { workflow } = await res.json();
+        if (!workflow) return;
+
+        // hydrate the store with the saved nodes and edges
+        // need to make sure these are arrays or reactflow will freak out
+        setNodes(workflow.nodes || []);
+        setEdges(workflow.edges || []);
+        setCurrentWorkflow(workflow);
+
+        // save to history so undo/redo works from this starting point
+        // without this the first undo would just clear evrything lol
+        setTimeout(() => {
+          saveToHistory();
+        }, 100);
+      } catch (err) {
+        // network error or somthing else went wrong
+        console.error('Failed to load saved worflow:', err);
+      } finally {
+        setIsLoadingWorkflow(false);
+      }
+    };
+
+    loadSavedWorkflow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflowId]);
+
   return (
     <div className="h-screen w-full relative overflow-hidden bg-[#050505]">
       
+      {/* loading overlay - shows when were fetching a saved workflow from the db */}
+      {isLoadingWorkflow && (
+        <div className="absolute inset-0 z-[60] bg-[#050505]/90 backdrop-blur-sm flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center gap-4"
+          >
+            <Loader2 size={28} className="text-white/30 animate-spin" />
+            <span className="text-white/25 text-sm font-medium tracking-wide">
+              Loading workflow...
+            </span>
+          </motion.div>
+        </div>
+      )}
+
       {/* ── BACKGROUND CANVAS (Absolute Full Screen) ── */}
       <motion.div 
         variants={canvasVariants}
@@ -101,12 +182,12 @@ export default function WorkflowPage() {
         {/* WORKSPACE AREA (Sidebars) */}
         <div className="flex-1 flex justify-between overflow-hidden w-full">
           
-          {/* LEFT SIDEBAR */}
+          {/* LEFT SIDEBAR - node picker */}
           <motion.div variants={sideBarLeftVariants} className="flex shrink-0 pointer-events-auto h-full">
             <NodeSidebar />
           </motion.div>
 
-          {/* RIGHT SIDEBAR */}
+          {/* RIGHT SIDEBAR - execution history */}
           <motion.div variants={sideBarRightVariants} className="flex shrink-0 pointer-events-auto h-full">
             <HistorySidebar />
           </motion.div>

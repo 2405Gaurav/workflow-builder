@@ -1,10 +1,10 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { LLMNodeData } from '@/lib/types';
 import { useWorkflowStore } from '@/lib/store';
-import { X, Sparkles, Cpu, MessageSquare, AlertCircle } from 'lucide-react';
+import { X, Sparkles, Cpu, MessageSquare, AlertCircle, ExternalLink, Copy, Check } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -26,8 +26,16 @@ export const LLMNode = memo(({ id, data }: NodeProps<Node<LLMNodeData>>) => {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
   const deleteNode = useWorkflowStore((state) => state.deleteNode);
   const isInputConnected = useWorkflowStore((state) => state.isInputConnected);
+  const [copied, setCopied] = useState(false);
 
   const textConnected = isInputConnected(id, 'text-input');
+  const outputUrl = useMemo(() => {
+    if (!data.result) return null;
+    // quick + pragmatic: find the first http(s) URL in the output text
+    // (covers blob urls, signed urls, and normal links)
+    const match = data.result.match(/https?:\/\/[^\s)]+/i);
+    return match?.[0] ?? null;
+  }, [data.result]);
 
   // Status-based class mapping
   const ringClass = 
@@ -156,13 +164,45 @@ export const LLMNode = memo(({ id, data }: NodeProps<Node<LLMNodeData>>) => {
               </div>
             </div>
 
-            {/* Output */}
+            {/* Output - prefer a link if this LLM produced a blob/url in a previous node */}
             {data.result && (
               <div className="space-y-2 pt-2 border-t border-white/5">
                 <div className="flex items-center gap-1.5 px-1">
                   <Sparkles size={10} className={`${data.status === 'running' ? 'animate-pulse' : ''} text-white/50`} />
-                  <span className="text-[9px] uppercase font-bold tracking-widest text-white/50">Output Generation</span>
+                  <span className="text-[9px] uppercase font-bold tracking-widest text-white/50">
+                    Output Generation
+                  </span>
                 </div>
+
+                {/* if the output contains a link, surface it as a clean URL row (open + copy) */}
+                {outputUrl && (
+                  <div className="flex items-center gap-1.5 px-3 py-2 bg-[#0d0d0d] border border-white/5 rounded-lg">
+                    <a
+                      href={outputUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 min-w-0 flex-1 text-white/35 hover:text-blue-400 transition-colors group/link"
+                      title={outputUrl}
+                    >
+                      <ExternalLink size={10} className="shrink-0" />
+                      <span className="mono text-[10px] truncate group-hover/link:text-blue-400">
+                        {outputUrl.replace(/^https?:\/\//, '').slice(0, 42)}…
+                      </span>
+                    </a>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(outputUrl);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="shrink-0 p-1 text-white/25 hover:text-white/70 hover:bg-white/5 rounded transition-all"
+                      title="Copy URL"
+                    >
+                      {copied ? <Check size={10} className="text-emerald-400" /> : <Copy size={10} />}
+                    </button>
+                  </div>
+                )}
+
                 <div
                   className={`nodrag nopan text-[12px] bg-[#0d0d0d] border border-emerald-500/10 p-3 rounded-lg
                     whitespace-pre-wrap text-white/80 leading-relaxed shadow-inner

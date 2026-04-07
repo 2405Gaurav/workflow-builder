@@ -1,4 +1,6 @@
-// components/Navbar.tsx
+// navbar component - top nav for the landing page
+// handles auth buttons and links, nothin too fancy here
+// shows sign in/up for guests and dashboard link for loged in users
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { UserButton, useAuth } from '@clerk/nextjs';
@@ -38,7 +40,7 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
         />
       </Link>
 
-      {/* Auth */}
+      {/* auth btns - show sign in/up when loged out, dashbaord link when loged in */}
       <div className="flex items-center gap-4">
         {isLoaded && !isSignedIn && (
           <>
@@ -75,16 +77,17 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
           </>
         )}
 
+        {/* signed in state - go to dashbaord instead of workflow directley */}
         {isLoaded && isSignedIn && (
           <>
             <button
-              onClick={() => router.push('/workflow')}
+              onClick={() => router.push('/dashboard')}
               className="text-[13px] font-medium tracking-wide cursor-pointer transition-all duration-200 mr-2"
               style={{ color: 'rgba(255,255,255,0.5)' }}
               onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.9)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
             >
-              Workspace →
+              Dashboard →
             </button>
             <UserButton
               appearance={{

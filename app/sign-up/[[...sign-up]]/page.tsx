@@ -88,7 +88,8 @@ export default function SignUpPage() {
        </div>
 
           <SignUp
-           forceRedirectUrl="/"
+           // straight to the dashboard after sign-up so people land in their "home base"
+           forceRedirectUrl="/dashboard"
             appearance={{
               variables: {
                 colorBackground: '#111118',

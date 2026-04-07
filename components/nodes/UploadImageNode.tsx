@@ -1,16 +1,18 @@
 'use client';
 
-import { memo, useRef } from 'react';
+import { memo, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { UploadImageNodeData } from '@/lib/types';
 import { useWorkflowStore } from '@/lib/store';
-import { Upload, X, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, X, Loader2, AlertCircle, ExternalLink, Copy, Check } from 'lucide-react';
 import Image from 'next/image';
 
 export const UploadImageNode = memo(({ id, data }: NodeProps<Node<UploadImageNodeData>>) => {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
   const deleteNode = useWorkflowStore((state) => state.deleteNode);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // tracks if the output url was just copyed to clipboard - resets after 2s
+  const [copied, setCopied] = useState(false);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -104,6 +106,37 @@ export const UploadImageNode = memo(({ id, data }: NodeProps<Node<UploadImageNod
             </button>
           )}
         </div>
+
+        {/* output URL row - appears after upload succeeds with the CDN link */}
+        {data.imageUrl && (
+          <div className="flex items-center gap-1.5 px-3 py-2 border-t border-white/5 bg-[#0d0d0d]">
+            {/* open image in a new browser tab */}
+            <a
+              href={data.imageUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 min-w-0 flex-1 text-white/30 hover:text-blue-400 transition-colors group/link"
+              title={data.imageUrl}
+            >
+              <ExternalLink size={9} className="shrink-0" />
+              <span className="mono text-[9px] truncate group-hover/link:text-blue-400">
+                {data.imageUrl.replace(/^https?:\/\//, '').slice(0, 30)}…
+              </span>
+            </a>
+            {/* copy the raw URL to clipboard */}
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(data.imageUrl!);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="shrink-0 p-1 text-white/20 hover:text-white/60 hover:bg-white/5 rounded transition-all"
+              title="Copy URL"
+            >
+              {copied ? <Check size={9} className="text-emerald-400" /> : <Copy size={9} />}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Output handle — larger yellow dot */}

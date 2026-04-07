@@ -133,94 +133,72 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
     }
 
-    // ==============================
-    // ✅ 1. Trigger.dev (PRIMARY)
-    // ==============================
-    if (process.env.TRIGGER_SECRET_KEY) {
-      try {
-        const run = await tasks.trigger("crop-image", {
-          imageUrl,
-          x: x || 0,
-          y: y || 0,
-          width: width || 100,
-          height: height || 100,
-        });
+    // This endpoint is intentionally Trigger.dev-only.
+    // If Trigger isn't configured, we want a loud failure (not a silent local crop).
+    if (!process.env.TRIGGER_SECRET_KEY) {
+      return NextResponse.json(
+        { error: "Trigger.dev is not configured (missing TRIGGER_SECRET_KEY)" },
+        { status: 503 }
+      );
+    }
 
-        let output: any = null;
+    const run = await tasks.trigger("crop-image", {
+      imageUrl,
+      x: x || 0,
+      y: y || 0,
+      width: width || 100,
+      height: height || 100,
+    });
 
-        for (let i = 0; i < 20; i++) {
-          await new Promise((r) => setTimeout(r, 1000));
-          const status = await runs.retrieve(run.id);
+    // Poll for completion (up to ~20s)
+    let output: any = null;
+    for (let i = 0; i < 20; i++) {
+      await new Promise((r) => setTimeout(r, 1000));
+      const status = await runs.retrieve(run.id);
 
-          if (status.status === "COMPLETED") {
-            output = status.output;
-            break;
-          }
-
-          if (status.status === "FAILED") {
-            throw new Error("Trigger.dev crop task failed");
-          }
-        }
-
-        if (output?.croppedImageUrl) {
-          // 🚨 guard against base64 from trigger.dev
-          if (output.croppedImageUrl.startsWith("data:")) {
-            throw new Error("Trigger.dev returned base64");
-          }
-          return NextResponse.json({ croppedImageUrl: output.croppedImageUrl });
-        }
-      } catch (err) {
-        console.warn("Trigger.dev crop failed → fallback:", err);
+      if (status.status === "COMPLETED") {
+        output = status.output;
+        break;
+      }
+      if (status.status === "FAILED") {
+        throw new Error("Trigger.dev crop task failed");
       }
     }
 
-    // ==============================
-    // ✅ 2. LOCAL FALLBACK (FIXED)
-    // ==============================
-    try {
-      const sharp = (await import("sharp")).default;
+    if (!output?.croppedImageUrl) {
+      throw new Error("Crop task completed without croppedImageUrl");
+    }
 
-      let imageBuffer: Buffer;
-
-      if (imageUrl.startsWith("data:")) {
-        const matches = imageUrl.match(/^data:[^;]+;base64,(.+)$/);
-        imageBuffer = Buffer.from(matches![1], "base64");
-      } else {
-        const response = await fetch(imageUrl);
-        imageBuffer = Buffer.from(await response.arrayBuffer());
+    // Trigger sometimes returns a data-url (base64). That's still "Trigger output" (not a local fallback),
+    // but the UI can't really use it downstream, so we normalize it into a proper blob URL here.
+    if (String(output.croppedImageUrl).startsWith("data:")) {
+      const matches = String(output.croppedImageUrl).match(/^data:([^;]+);base64,(.+)$/);
+      if (!matches) {
+        throw new Error("Trigger.dev returned an invalid data URL");
       }
 
-      const image = sharp(imageBuffer);
-      const metadata = await image.metadata();
+      const mimeType = matches[1] || "image/jpeg";
+      const base64 = matches[2];
+      const buffer = Buffer.from(base64, "base64");
 
-      const croppedBuffer = await image
-        .extract({
-          left: Math.floor((metadata.width || 0) * ((x || 0) / 100)),
-          top: Math.floor((metadata.height || 0) * ((y || 0) / 100)),
-          width: Math.floor((metadata.width || 0) * ((width || 100) / 100)),
-          height: Math.floor((metadata.height || 0) * ((height || 100) / 100)),
-        })
-        .jpeg()
-        .toBuffer();
+      const ext =
+        mimeType === "image/png" ? "png" :
+        mimeType === "image/webp" ? "webp" :
+        "jpg";
 
-      // ✅ Upload to Blob
       const blob = await put(
-        `images/cropped-${Date.now()}.jpg`,
-        croppedBuffer,
+        `images/cropped/${userId}/cropped-${Date.now()}.${ext}`,
+        buffer,
         {
           access: "public",
-          contentType: "image/jpeg",
+          contentType: mimeType,
         }
       );
 
-      return NextResponse.json({
-        croppedImageUrl: blob.url,
-      });
-
-    } catch (fallbackError) {
-      console.error("Crop fallback error:", fallbackError);
-      return NextResponse.json({ croppedImageUrl: imageUrl });
+      return NextResponse.json({ croppedImageUrl: blob.url });
     }
+
+    return NextResponse.json({ croppedImageUrl: output.croppedImageUrl });
 
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

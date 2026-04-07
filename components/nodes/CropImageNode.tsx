@@ -1,14 +1,16 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { CropImageNodeData } from '@/lib/types';
 import { useWorkflowStore } from '@/lib/store';
-import { Crop, X, Settings2, AlertCircle } from 'lucide-react';
+import { Crop, X, Settings2, AlertCircle, ExternalLink, Copy, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 
 export const CropImageNode = memo(({ id, data }: NodeProps<Node<CropImageNodeData>>) => {
+  // track wether the url was just copied - resets after 2 secs
+  const [copied, setCopied] = useState(false);
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
   const deleteNode = useWorkflowStore((state) => state.deleteNode);
   const isInputConnected = useWorkflowStore((state) => state.isInputConnected);
@@ -106,6 +108,37 @@ export const CropImageNode = memo(({ id, data }: NodeProps<Node<CropImageNodeDat
               </span>
             </div>
           </div>
+
+          {/* output URL row - only shows up after we have a cropped result */}
+          {data.croppedImageUrl && (
+            <div className="flex items-center gap-1.5 px-3 py-2 border-b border-white/5 bg-[#0d0d0d]">
+              {/* open in browser link */}
+              <a
+                href={data.croppedImageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 min-w-0 flex-1 text-white/30 hover:text-blue-400 transition-colors group/link"
+                title={data.croppedImageUrl}
+              >
+                <ExternalLink size={9} className="shrink-0" />
+                <span className="mono text-[9px] truncate group-hover/link:text-blue-400">
+                  {data.croppedImageUrl.replace(/^https?:\/\//, '').slice(0, 30)}…
+                </span>
+              </a>
+              {/* copy url btn */}
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(data.croppedImageUrl!);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="shrink-0 p-1 text-white/20 hover:text-white/60 hover:bg-white/5 rounded transition-all"
+                title="Copy URL"
+              >
+                {copied ? <Check size={9} className="text-emerald-400" /> : <Copy size={9} />}
+              </button>
+            </div>
+          )}
 
           {/* Settings Area */}
           <div className="p-3 bg-[#161616]">

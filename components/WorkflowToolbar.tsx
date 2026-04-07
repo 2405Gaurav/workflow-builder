@@ -1,6 +1,11 @@
 'use client';
 
+// workflow toolbar - the floating top bar in the editor
+// has run buttons, save dialog, undo/redo, and import/export
+// also shows a back link to dashboard so ppl can navigate easily
+
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useWorkflowStore } from '@/lib/store';
 import { useUser } from '@clerk/nextjs';
 import { ExecutionEngine } from '@/lib/execution-engine';
@@ -17,6 +22,7 @@ import {
   Zap,
   Target,
   ChevronDown,
+  ArrowLeft,
 } from 'lucide-react';
 import { LoadSampleButton } from './LoadSampleButton';
 import { Input } from '@/components/ui/input';
@@ -30,6 +36,7 @@ import {
 } from '@/components/ui/dialog';
 
 export function WorkflowToolbar() {
+  const router = useRouter();
   const { user } = useUser();
   const {
     nodes,
@@ -51,17 +58,22 @@ export function WorkflowToolbar() {
   const [workflowName, setWorkflowName] = useState('');
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
+  // sync workflow name from store when it changes
+  // this way when you load a saved workflow the name shows up in the save dialog
   useEffect(() => {
     if (currentWorkflow?.name) {
       setWorkflowName(currentWorkflow.name);
     }
   }, [currentWorkflow]);
 
+  // execute the workflow - can be full, partial (selected nodes), or single node
+  // creates an execution record in the db first, then runs the engine
   const handleExecute = async (scope: 'full' | 'partial' | 'single') => {
     if (!user || isExecuting) return;
     setIsExecuting(true);
 
     try {
+      // create a new execution record in the database
       const executionResponse = await fetch('/api/executions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -78,10 +90,12 @@ export function WorkflowToolbar() {
       if (!execution) throw new Error('Failed to create execution record');
       addExecution(execution);
 
+      // reset all nodes to idle before starting the run
       nodes.forEach((node) => {
         updateNodeData(node.id, { status: 'idle', error: undefined });
       });
 
+      // fire up the execution engine with a callback to update node statuses in realtime
       const engine = new ExecutionEngine(nodes, edges, (nodeId, status, data) => {
         const updateData: any = { status };
         if (status === 'success') {
@@ -93,6 +107,7 @@ export function WorkflowToolbar() {
         updateNodeData(nodeId, updateData);
       });
 
+      // figure out which nodes to run based on scope
       const selectedNodeIds =
         scope === 'single' && selectedNodes.length === 1
           ? [selectedNodes[0]]
@@ -102,6 +117,7 @@ export function WorkflowToolbar() {
 
       const result = await engine.execute(scope, selectedNodeIds);
 
+      // calculate how long the whole thing took and update the db
       const completedAt = new Date().toISOString();
       const durationMs = Date.now() - new Date(execution.startedAt).getTime();
       const finalStatus = result.success ? 'success' : 'failed';
@@ -118,6 +134,7 @@ export function WorkflowToolbar() {
         }),
       });
 
+      // also update local state so the history sidebar refreshes instantly
       updateExecution(execution.id, {
         status: finalStatus,
         nodeResults: result.results,
@@ -133,6 +150,9 @@ export function WorkflowToolbar() {
     }
   };
 
+  // save the current workflow to the database
+  // if we alredy have a current workflow (loaded from dashboard), it updates
+  // otherwise it creates a new one
   const handleSave = async () => {
     if (!user || !workflowName) return;
     setIsSaving(true);
@@ -163,11 +183,22 @@ export function WorkflowToolbar() {
   };
 
   return (
-    // CHANGED: Added m-4, rounded-2xl, shadow-2xl, and full border to create the detached, floating island look
+    // floating toolbar island - detached from edges with rounded corners
     <div className="h-16 m-4 flex items-center justify-between px-6 bg-[#050505] border border-white/5 rounded-2xl shadow-2xl shadow-black/50 relative z-20">
       
-      {/* LEFT — Primary Actions */}
+      {/* LEFT — back to dashboard + primary actions */}
       <div className="flex items-center gap-2 shrink-0">
+        {/* dashboard back button - subtle but always visible */}
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="p-2 text-white/20 hover:text-white/60 hover:bg-white/5 rounded-xl transition-all mr-1"
+          title="Back to Dashboard"
+        >
+          <ArrowLeft size={16} />
+        </button>
+
+        <div className="h-4 w-px bg-white/10 mx-1" />
+
         <motion.div whileTap={{ scale: 0.96 }}>
           <Button
             onClick={() => handleExecute('full')}
@@ -186,6 +217,7 @@ export function WorkflowToolbar() {
 
         <div className="h-4 w-px bg-white/10 mx-2" />
 
+        {/* partial and single node execution btns */}
         <div className="flex items-center gap-1">
           <ToolbarAction 
             onClick={() => handleExecute('partial')}
@@ -202,10 +234,10 @@ export function WorkflowToolbar() {
         </div>
       </div>
 
-      {/* RIGHT — Utilities & Selection Badge */}
+      {/* RIGHT — utilities, save dialog, selection badge */}
       <div className="flex items-center gap-2 shrink-0">
         
-        {/* FIXED POSITIONING: Selection Badge is now part of the flex flow */}
+        {/* selection badge - shows how many nodes are currently selected */}
         <AnimatePresence mode="wait">
           {selectedNodes.length > 0 && (
             <motion.div 
@@ -222,13 +254,13 @@ export function WorkflowToolbar() {
           )}
         </AnimatePresence>
 
-        {/* Undo/Redo Group */}
+        {/* undo/redo group */}
         <div className="flex bg-white/[0.03] rounded-xl p-1 border border-white/5">
           <button onClick={undo} className="p-2 text-white/30 hover:text-white transition-colors"><Undo size={14}/></button>
           <button onClick={redo} className="p-2 text-white/30 hover:text-white transition-colors"><Redo size={14}/></button>
         </div>
 
-        {/* Save Dialog */}
+        {/* save dialog - lets user name and save the workflow */}
         <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
           <DialogTrigger asChild>
             <Button
@@ -274,6 +306,7 @@ export function WorkflowToolbar() {
 
         <div className="h-4 w-px bg-white/10 mx-2" />
 
+        {/* clear canvas btn - deltes all nodes and edges */}
         <Button
           variant="ghost"
           onClick={clearWorkflow}
@@ -288,6 +321,7 @@ export function WorkflowToolbar() {
 }
 
 // --- SUB-COMPONENT: TOOLBAR ACTION ---
+// reusable button for the partial/single execute actions
 function ToolbarAction({ icon: Icon, label, onClick, disabled, tooltip }: any) {
   return (
     <motion.div whileTap={{ scale: 0.95 }}>

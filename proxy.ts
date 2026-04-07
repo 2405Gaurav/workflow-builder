@@ -1,10 +1,12 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// Define the routes that require the user to be signed in
-const isProtectedRoute = createRouteMatcher(['/workflow(.*)']);
+// protecetd routes - user needs to be signed in to acess these
+// dashboard and workflow are both locked behind auth
+const isProtectedRoute = createRouteMatcher(['/workflow(.*)', '/dashboard(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
-  // If the user tries to access a protected route without being logged in, redirect them
+  // redirect to sign-in if user trys to hit a protectd route w/o being loged in
+  // clerk handles the redirect automaticaly which is nice
   if (isProtectedRoute(req)) {
     await auth.protect();
   }

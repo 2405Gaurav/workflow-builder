@@ -1,31 +1,49 @@
 'use client';
 
+// landing page - the first thing ppl see when they open the app
+// tryin to make it look premium with smooth animations and clean typography
+// signed in users get redirected to dashboard instead of workflow directyl
+
 import Navbar from '@/components/Navbar';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Globe } from 'lucide-react';
 
+// basic fade-in-up animation variant, used evrywhere
 const fadeInUp = {
   initial: { opacity: 0, y: 24 },
   animate: { opacity: 1, y: 0 },
 };
 
+// stagger children for that cascading entrance effect
 const staggerContainer = {
   animate: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } }
 };
 
 export default function LandingPage() {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const { scrollYProgress } = useScroll();
   
-  // Enhanced scroll parallax effects
+  // Enhanced scroll parallax effects - makes the hero feel alive
   const heroOpacity = useTransform(scrollYProgress,[0, 0.25], [1, 0]);
   const heroScale = useTransform(scrollYProgress,[0, 0.25], [1, 0.92]);
   const heroY = useTransform(scrollYProgress, [0, 0.25], [0, 60]);
   
-  // Background parallax
+  // background parallax - subtle but noticable
   const bgY = useTransform(scrollYProgress, [0, 1],['0%', '25%']);
+
+  // if user is signed in, send them to dashboard first
+  // otherwise just open the workflow builder as a guest preview kinda thing
+  const handleCTAClick = () => {
+    if (isSignedIn) {
+      router.push('/dashboard');
+    } else {
+      router.push('/sign-up');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-white/20 overflow-x-hidden">
@@ -74,7 +92,7 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* ENHANCED PAGE LAUNCH OVERLAY */}
+      {/* page entrance - that satisfying wipe-up reveal */}
       <motion.div
         className="fixed inset-0 z-[100] bg-[#050505] pointer-events-none"
         initial={{ y: 0 }}
@@ -82,7 +100,7 @@ export default function LandingPage() {
         transition={{ duration: 1.2, ease: [0.85, 0, 0.15, 1], delay: 0.1 }}
       />
 
-      {/* BACKGROUND WITH PARALLAX */}
+      {/* BACKGROUND WITH PARALLAX - subtle moving blobs */}
       <motion.div style={{ y: bgY }} className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-15%] left-[-5%] w-[45%] h-[45%] bg-purple-700/5 blur-[140px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-700/5 blur-[140px] rounded-full" />
@@ -91,7 +109,7 @@ export default function LandingPage() {
 
       <main className="relative z-10 pt-28 pb-20 px-6 max-w-7xl mx-auto">
 
-        {/* ── HERO ── */}
+        {/* ── HERO SECTION ── */}
         <motion.section
           initial="initial"
           animate="animate"
@@ -110,7 +128,7 @@ export default function LandingPage() {
                 boxShadow: '0 40px 120px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
               }}
             >
-              {/* Noise overlay */}
+              {/* noise texture overlay - adds that film grain feel */}
               <div
                 className="absolute inset-0 opacity-[0.04] pointer-events-none"
                 style={{
@@ -118,7 +136,7 @@ export default function LandingPage() {
                   backgroundSize: '200px 200px',
                 }}
               />
-              {/* Bottom dark fade */}
+              {/* Bottom dark fade - helps the text pop against background */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
               {/* Headline */}
@@ -134,7 +152,7 @@ export default function LandingPage() {
                 Build your next<br />AI workflow.
               </motion.h1>
 
-              {/* Single CTA */}
+              {/* main CTA - routes to dashboard if signed in, sign-up if not */}
               <motion.div
                 variants={{
                   initial: { opacity: 0, y: 20 },
@@ -144,16 +162,16 @@ export default function LandingPage() {
                 className="z-10"
               >
                 <button
-                  onClick={() => router.push('/workflow')}
+                  onClick={handleCTAClick}
                   className="bg-white text-black px-10 py-3.5 rounded-full font-bold text-[15px] hover:bg-white/90 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-2xl shadow-black/40"
                 >
-                  Create Free Workflow
+                  {isSignedIn ? 'Go to Dashboard' : 'Get Started Free'}
                 </button>
               </motion.div>
             </motion.div>
           </motion.div>
 
-          {/* Tagline strip */}
+          {/* tagline strip below hero */}
           <motion.div
             variants={fadeInUp}
             transition={{ duration: 0.8, delay: 0.6, ease:[0.16, 1, 0.3, 1] }}
@@ -167,7 +185,7 @@ export default function LandingPage() {
           </motion.div>
         </motion.section>
 
-        {/* ── STATS ── */}
+        {/* ── STATS SECTION ── */}
         <motion.section
           variants={staggerContainer}
           initial="initial"
@@ -193,7 +211,7 @@ export default function LandingPage() {
           ))}
         </motion.section>
 
-        {/* ── FEATURES ── */}
+        {/* ── FEATURES SECTION ── */}
         <section className="mb-10">
           <div className="flex flex-col md:flex-row justify-between items-end mb-14 gap-6">
             <motion.h2

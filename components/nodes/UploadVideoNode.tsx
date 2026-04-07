@@ -1,16 +1,18 @@
 'use client';
 
-import { memo, useRef } from 'react';
+import { memo, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { UploadVideoNodeData } from '@/lib/types';
 import { useWorkflowStore } from '@/lib/store';
-import { Upload, X, Loader2, Film, AlertCircle } from 'lucide-react';
+import { Upload, X, Loader2, Film, AlertCircle, ExternalLink, Copy, Check } from 'lucide-react';
 import { upload } from '@vercel/blob/client';
 
 export const UploadVideoNode = memo(({ id, data }: NodeProps<Node<UploadVideoNodeData>>) => {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
   const deleteNode = useWorkflowStore((state) => state.deleteNode);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // tiny UX thing, but it makes copy feel "confirmed" instead of random
+  const [copied, setCopied] = useState(false);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -142,6 +144,37 @@ export const UploadVideoNode = memo(({ id, data }: NodeProps<Node<UploadVideoNod
             </button>
           )}
         </div>
+
+        {/* output URL row - shows the blob URL once upload finishes */}
+        {data.videoUrl && (
+          <div className="flex items-center gap-1.5 px-3 py-2 border-t border-white/5 bg-[#0d0d0d]">
+            {/* open the raw video url in a new tab */}
+            <a
+              href={data.videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 min-w-0 flex-1 text-white/30 hover:text-blue-400 transition-colors group/link"
+              title={data.videoUrl}
+            >
+              <ExternalLink size={9} className="shrink-0" />
+              <span className="mono text-[9px] truncate group-hover/link:text-blue-400">
+                {data.videoUrl.replace(/^https?:\/\//, '').slice(0, 30)}…
+              </span>
+            </a>
+            {/* copy url */}
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(data.videoUrl!);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="shrink-0 p-1 text-white/20 hover:text-white/60 hover:bg-white/5 rounded transition-all"
+              title="Copy URL"
+            >
+              {copied ? <Check size={9} className="text-emerald-400" /> : <Copy size={9} />}
+            </button>
+          </div>
+        )}
 
         {/* Info & Settings Area */}
         <div className="p-3 bg-[#161616] space-y-3">
