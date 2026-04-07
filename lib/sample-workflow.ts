@@ -120,7 +120,7 @@ export const sampleWorkflow: { nodes: WorkflowNode[]; edges: WorkflowEdge[] } = 
         label: 'text',
         type: 'text',
         outputType: 'text',
-        text: 'You are a social media manager. Create a tweet-length marketing post based on the product image and video frame.',
+        text: 'You are a senior social media manager and brand strategist. Write like you actually ship campaigns. Use the TWO images provided as visual context, and be specific about what you see (but dont invent wild details).',
         status: 'idle',
       },
     },
@@ -136,7 +136,19 @@ export const sampleWorkflow: { nodes: WorkflowNode[]; edges: WorkflowEdge[] } = 
         type: 'llm',
         outputType: 'text',
         model: 'gemini-2.5-flash',
-        userMessage: 'Using the product description and visual assets provided, create an engaging tweet-length social media marketing post with a catchy headline, key highlights, a call to action, and relevant hashtags.',
+        userMessage: `Create a high quality, detailed social post package for this product based on:
+1) the product description text coming from the previous LLM node
+2) the two images you receive (cropped product photo + extracted video frame)
+
+Output format:
+- Hook headline (1 line)
+- Main caption (8–14 lines, punchy but premium)
+- 5 feature bullets (short)
+- CTA line
+- Hashtags (8–12, relevant, not cringe)
+- 3 alt caption variations (short)
+
+Make it feel like a real senior marketer wrote it. Keep it concrete and aligned with what the visuals show.`,
         status: 'idle',
       },
     },
