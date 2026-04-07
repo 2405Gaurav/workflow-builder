@@ -163,14 +163,58 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 importWorkflow: (json: string) => {
   try {
     const workflow = JSON.parse(json);
-    if (!workflow.nodes || !workflow.edges) {
+    if (!workflow || !Array.isArray(workflow.nodes) || !Array.isArray(workflow.edges)) {
       return { success: false, error: 'Invalid workflow file' };
     }
-    set({
-      nodes: workflow.nodes,
-      edges: workflow.edges,
-      selectedNodes: [],
+
+    // treat imported json like a brand new canvas session (not tied to any saved workflow id)
+    // if we don't reset this, "Save" can accidentally overwrite the last opened workflow.
+    const normalizedNodes: WorkflowNode[] = (workflow.nodes as any[]).map((n, idx) => {
+      const id = String(n?.id ?? `import-node-${idx}-${Date.now()}`);
+      const type = n?.type ?? n?.data?.type ?? 'text';
+      const position = n?.position && typeof n.position.x === 'number' && typeof n.position.y === 'number'
+        ? n.position
+        : { x: 200 + idx * 20, y: 200 + idx * 20 };
+
+      const data = {
+        ...(n?.data || {}),
+        // keep the original outputType if present, otherwise do a best guess so connections validate
+        outputType: n?.data?.outputType || n?.data?.output_type || (type === 'upload-video' ? 'video' : type.includes('image') ? 'image' : 'text'),
+        status: 'idle',
+        error: undefined,
+      };
+
+      return {
+        ...n,
+        id,
+        type,
+        position,
+        data,
+        selected: false,
+        dragging: false,
+      } as WorkflowNode;
     });
+
+    const normalizedEdges: WorkflowEdge[] = (workflow.edges as any[]).map((e, idx) => {
+      const id = String(e?.id ?? `import-edge-${idx}-${Date.now()}`);
+      return {
+        ...e,
+        id,
+        animated: e?.animated ?? true,
+      } as WorkflowEdge;
+    });
+
+    // reset history so undo/redo is clean after import
+    set({
+      nodes: normalizedNodes,
+      edges: normalizedEdges,
+      selectedNodes: [],
+      currentWorkflow: null,
+      history: [],
+      historyIndex: -1,
+    });
+
+    // seed the first history entry so undo doesn't resurrect older sessions
     get().saveToHistory();
     return { success: true };
   } catch {
