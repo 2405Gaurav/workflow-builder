@@ -1,10 +1,10 @@
 'use client';
 
-// workflow editor page - the main canvas where users build there pipelines
-// if theres an id in the url we load that saved workflow, otherwise blank canvas
+// workflow editor page, the main canvas where users build their pipelines
+// if there's an id in the url we load that saved workflow, otherwise blank canvas
 // kinda the heart of the whole app tbh
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ReactFlowProvider } from '@xyflow/react';
 import { motion, Variants } from 'framer-motion';
@@ -18,8 +18,8 @@ import { Loader2 } from 'lucide-react';
 // smooth apple-esque easing curve, makes everything feel premium
 const elegantEase: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-// ── 1. CANVAS ENTRANCE (Deep Focus Effect) ──
-// starts slightly zoomed in and blurry, then settles in - looks realy cinematic
+// canvas entrance animation, starts slightly zoomed in and blurry then settles in
+// looks really cinematic honestly
 const canvasVariants: Variants = {
   initial: { 
     opacity: 0, 
@@ -34,21 +34,20 @@ const canvasVariants: Variants = {
   },
 };
 
-// ── 2. UI STAGGER LAYOUT ──
-// staggers the UI panels so they dont all pop in at once
+// staggers all the ui panels so they don't all pop in at once
 const uiLayoutVariants: Variants = {
   initial: { opacity: 1 },
   animate: {
     opacity: 1,
     transition: {
       staggerChildren: 0.12,
-      delayChildren: 0.5, // UI comes in as the canvas is resolving
+      delayChildren: 0.5, // ui comes in as the canvas is still resolving
     },
   },
 };
 
-// ── 3. INDIVIDUAL UI PANELS ──
-// they glide in with a subtle unblur, kinda like glass panels materializing
+// individual panel animations, they glide in with a subtle unblur
+// kinda like glass panels materializing out of thin air
 const topBarVariants: Variants = {
   initial: { opacity: 0, y: -20, filter: 'blur(8px)' },
   animate: { 
@@ -79,20 +78,22 @@ const sideBarRightVariants: Variants = {
   },
 };
 
-export default function WorkflowPage() {
+// the actual page content lives here, split out so we can wrap it in Suspense
+// next.js requires useSearchParams to be inside a suspense boundary or the build explodes
+function WorkflowPageContent() {
   const searchParams = useSearchParams();
   const workflowId = searchParams.get('id');
   const [isLoadingWorkflow, setIsLoadingWorkflow] = useState(false);
 
-  // grab store actions we need for loading a saved worflow
+  // grab store actions we need for loading a saved workflow
   const { setNodes, setEdges, setCurrentWorkflow, saveToHistory, clearWorkflow } = useWorkflowStore();
 
-  // if theres a workflow id in the url, fetch it from the api and hydrate the canvas
-  // this is what makes the dashboard -> editor flow acutally work
+  // if there's a workflow id in the url, fetch it from the api and hydrate the canvas
+  // this is what makes the dashboard to editor flow actually work
   useEffect(() => {
-    // super important: when there's NO id, we want a *real* blank canvas.
-    // zustand store sticks around between route changes, so without this,
-    // "New Workflow" can accidentally show the last opened saved workflow.
+    // super important: when there's no id, we want a real blank canvas
+    // zustand store sticks around between route changes, so without this
+    // "new workflow" can accidentally show the last opened saved workflow
     if (!workflowId) {
       clearWorkflow();
       setCurrentWorkflow(null);
@@ -106,7 +107,7 @@ export default function WorkflowPage() {
       try {
         const res = await fetch(`/api/workflows/${workflowId}`);
         if (!res.ok) {
-          console.error('Couldnt load workflow, server returned:', res.status);
+          console.error('couldn\'t load workflow, server returned:', res.status);
           return;
         }
 
@@ -120,13 +121,13 @@ export default function WorkflowPage() {
         setCurrentWorkflow(workflow);
 
         // save to history so undo/redo works from this starting point
-        // without this the first undo would just clear evrything lol
+        // without this the first undo would just clear everything lol
         setTimeout(() => {
           saveToHistory();
         }, 100);
       } catch (err) {
-        // network error or somthing else went wrong
-        console.error('Failed to load saved worflow:', err);
+        // network error or something else went wrong
+        console.error('failed to load saved workflow:', err);
       } finally {
         setIsLoadingWorkflow(false);
       }
@@ -139,7 +140,7 @@ export default function WorkflowPage() {
   return (
     <div className="h-screen w-full relative overflow-hidden bg-[#050505]">
       
-      {/* loading overlay - shows when were fetching a saved workflow from the db */}
+      {/* loading overlay, shows when we're fetching a saved workflow from the db */}
       {isLoadingWorkflow && (
         <div className="absolute inset-0 z-[60] bg-[#050505]/90 backdrop-blur-sm flex items-center justify-center">
           <motion.div
@@ -155,7 +156,7 @@ export default function WorkflowPage() {
         </div>
       )}
 
-      {/* ── BACKGROUND CANVAS (Absolute Full Screen) ── */}
+      {/* background canvas, sits absolute full screen behind everything */}
       <motion.div 
         variants={canvasVariants}
         initial="initial"
@@ -167,27 +168,27 @@ export default function WorkflowPage() {
         </ReactFlowProvider>
       </motion.div>
 
-      {/* ── UI OVERLAY (Floating Elements) ── */}
+      {/* ui overlay, floating panels on top of the canvas */}
       <motion.div
         className="absolute inset-0 z-10 flex flex-col pointer-events-none"
         initial="initial"
         animate="animate"
         variants={uiLayoutVariants}
       >
-        {/* TOP TOOLBAR */}
+        {/* top toolbar */}
         <motion.div variants={topBarVariants} className="pointer-events-auto w-full">
           <WorkflowToolbar />
         </motion.div>
 
-        {/* WORKSPACE AREA (Sidebars) */}
+        {/* workspace area with both sidebars */}
         <div className="flex-1 flex justify-between overflow-hidden w-full">
           
-          {/* LEFT SIDEBAR - node picker */}
+          {/* left sidebar, node picker */}
           <motion.div variants={sideBarLeftVariants} className="flex shrink-0 pointer-events-auto h-full">
             <NodeSidebar />
           </motion.div>
 
-          {/* RIGHT SIDEBAR - execution history */}
+          {/* right sidebar, execution history */}
           <motion.div variants={sideBarRightVariants} className="flex shrink-0 pointer-events-auto h-full">
             <HistorySidebar />
           </motion.div>
@@ -195,7 +196,7 @@ export default function WorkflowPage() {
         </div>
       </motion.div>
 
-      {/* GLOBAL BACKGROUND STYLE */}
+      {/* keeps the whole page background dark, no white flash on load */}
       <style jsx global>{`
         html, body {
           background-color: #050505;
@@ -205,5 +206,19 @@ export default function WorkflowPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+// wrapping in Suspense is required by next.js when using useSearchParams
+// without this the production build just fails, learned that the hard way
+export default function WorkflowPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen w-full bg-[#050505] flex items-center justify-center">
+        <Loader2 size={28} className="text-white/30 animate-spin" />
+      </div>
+    }>
+      <WorkflowPageContent />
+    </Suspense>
   );
 }
