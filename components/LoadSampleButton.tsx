@@ -6,10 +6,12 @@ import { sampleWorkflow } from '@/lib/sample-workflow';
 import { Box } from 'lucide-react'; 
 
 export function LoadSampleButton() {
-  const { setNodes, setEdges, saveToHistory } = useWorkflowStore();
+  const { setNodes, setEdges, saveToHistory, clearWorkflow, setCurrentWorkflow } = useWorkflowStore();
 
   const handleLoadSample = () => {
-    //kreaaaaa style
+    // load the sample as a fresh "unsaved" session, so it doesnt overwrite whatever you had open before
+    clearWorkflow();
+    setCurrentWorkflow(null);
     setNodes(sampleWorkflow.nodes as any);
     setEdges(sampleWorkflow.edges as any);
     saveToHistory();
