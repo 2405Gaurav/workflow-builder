@@ -236,7 +236,7 @@ export function HistorySidebar() {
                               }}
                             >
                               <AlertCircle size={13} className="text-rose-400 shrink-0 mt-0.5" />
-                              <p className="text-[10px] text-rose-300 leading-relaxed font-medium">
+                              <p className="text-[10px] text-rose-300 leading-relaxed font-medium min-w-0 break-words whitespace-pre-wrap">
                                 {activeExecution.errorMessage}
                               </p>
                             </div>
