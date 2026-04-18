@@ -16,6 +16,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.node_results) updateData.nodeResults = body.node_results; // Map snake to camel
   if (body.duration_ms) updateData.durationMs = body.duration_ms;   // Map snake to camel
   if (body.error_message) updateData.errorMessage = body.error_message;
+  if (body.completed_at) updateData.completedAt = new Date(body.completed_at);
 
   const result = await prisma.workflowExecution.updateMany({
     where: { id, userId },

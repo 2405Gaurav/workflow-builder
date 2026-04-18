@@ -11,7 +11,8 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { 
   Clock, CheckCircle, XCircle, Loader2, 
   History, ChevronRight, Zap, Activity,
-  PanelRightClose, PanelRightOpen, AlertCircle, Hash 
+  PanelRightClose, PanelRightOpen, AlertCircle, Hash,
+  ExternalLink, Copy, Check, Image as ImageIcon, FileText, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -77,7 +78,7 @@ export function HistorySidebar() {
     <div className="h-full max-h-[calc(100vh-24px)] flex items-stretch py-3 pr-3 pl-0">
       <motion.div
         initial={false}
-        animate={{ width: isCollapsed ? 64 : 240 }}
+        animate={{ width: isCollapsed ? 64 : 280 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="h-full max-h-[calc(100vh-24px)] flex flex-col overflow-hidden select-none relative z-30 rounded-2xl"
         style={{
@@ -213,7 +214,7 @@ export function HistorySidebar() {
                       )}
                     </button>
 
-                    {/* expanded detail panel - shows node-level results */}
+                    {/* expanded detail panel - shows node-level results with outputs */}
                     <AnimatePresence>
                       {isActive && !isCollapsed && (
                         <motion.div
@@ -246,27 +247,15 @@ export function HistorySidebar() {
                             Node Logs
                           </span>
 
-                          {/* per-node execution results */}
+                          {/* per-node execution results — now with output previews */}
                           {!activeExecution?.nodeResults ? (
                             <div className="py-3 flex justify-center">
                               <Loader2 size={13} className="animate-spin text-white/10" />
                             </div>
                           ) : (
-                            <div className="max-h-44 overflow-y-auto pr-1 custom-scrollbar space-y-1.5">
+                            <div className="max-h-[320px] overflow-y-auto pr-1 custom-scrollbar space-y-1.5">
                               {Object.entries(activeExecution.nodeResults as Record<string, any>).map(([nodeId, result]) => (
-                                <div
-                                  key={nodeId}
-                                  className="px-2.5 py-2 rounded-lg flex items-center justify-between"
-                                  style={{
-                                    background: 'rgba(255,255,255,0.02)',
-                                    border: '1px solid rgba(255,255,255,0.04)',
-                                  }}
-                                >
-                                  <span className="text-[10px] font-bold text-white/35 truncate">
-                                    {nodeId.split('-')[0].toUpperCase()}
-                                  </span>
-                                  <StatusDot status={result.status} />
-                                </div>
+                                <NodeResultCard key={nodeId} nodeId={nodeId} result={result} />
                               ))}
                             </div>
                           )}
@@ -284,13 +273,161 @@ export function HistorySidebar() {
         <style jsx>{`
           .custom-scrollbar::-webkit-scrollbar { width: 3px; }
           .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
-        `}</style>
+        `}
+        </style>
       </motion.div>
     </div>
   );
 }
 
 // --- HELPER COMPONENTS ---
+
+// Full node result card — shows status AND output (image link, text preview, etc.)
+// This replaces the old simple status-only row so reviewer can see actual outputs
+function NodeResultCard({ nodeId, result }: { nodeId: string; result: any }) {
+  const [copiedUrl, setCopiedUrl] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
+
+  // figure out what type of node this was from the id prefix
+  const nodeType = nodeId.split('-')[0].toLowerCase();
+  const nodeLabel = nodeId.split('-')[0].toUpperCase();
+
+  // extract output data — execution engine stores outputs in result.outputs
+  const outputs = result.outputs || {};
+  const imageUrl = outputs.imageUrl;
+  const textOutput = outputs.text;
+
+  // determine the right icon for the node type
+  const TypeIcon = imageUrl ? ImageIcon
+    : textOutput ? (nodeType === 'llm' ? Sparkles : FileText)
+    : null;
+
+  return (
+    <div
+      className="rounded-lg overflow-hidden"
+      style={{
+        background: 'rgba(255,255,255,0.02)',
+        border: '1px solid rgba(255,255,255,0.04)',
+      }}
+    >
+      {/* top row: node name + status indicator */}
+      <div className="flex items-center justify-between px-2.5 py-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {TypeIcon && <TypeIcon size={10} className="text-white/25 shrink-0" />}
+          <span className="text-[10px] font-bold text-white/35 truncate">
+            {nodeLabel}
+          </span>
+        </div>
+        <StatusDot status={result.status} />
+      </div>
+
+      {/* image output — clickable thumbnail + external link + copy */}
+      {imageUrl && result.status === 'success' && (
+        <div className="px-2.5 pb-2 space-y-1.5">
+          {/* thumbnail preview */}
+          <a
+            href={imageUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block rounded-md overflow-hidden border border-white/5 hover:border-white/15 transition-colors"
+            title="Open full image in new tab"
+          >
+            <img
+              src={imageUrl}
+              alt={`${nodeLabel} output`}
+              className="w-full h-20 object-cover bg-black/50"
+              onError={(e) => {
+                // if the image fails to load, hide the thumbnail
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </a>
+          {/* url row with open + copy buttons */}
+          <div className="flex items-center gap-1">
+            <a
+              href={imageUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 min-w-0 flex-1 text-white/25 hover:text-blue-400 transition-colors group/link"
+              title={imageUrl}
+            >
+              <ExternalLink size={8} className="shrink-0" />
+              <span className="mono text-[8px] truncate group-hover/link:text-blue-400">
+                {imageUrl.replace(/^https?:\/\//, '').slice(0, 28)}…
+              </span>
+            </a>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(imageUrl);
+                setCopiedUrl(true);
+                setTimeout(() => setCopiedUrl(false), 2000);
+              }}
+              className="shrink-0 p-0.5 text-white/15 hover:text-white/50 hover:bg-white/5 rounded transition-all"
+              title="Copy image URL"
+            >
+              {copiedUrl ? <Check size={8} className="text-emerald-400" /> : <Copy size={8} />}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* text/LLM output — truncated preview with copy */}
+      {textOutput && result.status === 'success' && (
+        <div className="px-2.5 pb-2 space-y-1">
+          <div
+            className="text-[9px] text-white/50 leading-relaxed bg-black/30 rounded-md p-2 border border-white/3 max-h-[60px] overflow-hidden relative"
+            title={textOutput}
+          >
+            {textOutput.slice(0, 200)}
+            {textOutput.length > 200 && (
+              <span className="text-white/20">…</span>
+            )}
+            {/* fade-out gradient at the bottom of long text */}
+            {textOutput.length > 100 && (
+              <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-black/60 to-transparent rounded-b-md" />
+            )}
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[8px] text-white/15 font-mono">
+              {textOutput.length} chars
+            </span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(textOutput);
+                setCopiedText(true);
+                setTimeout(() => setCopiedText(false), 2000);
+              }}
+              className="flex items-center gap-1 text-[8px] text-white/20 hover:text-white/50 hover:bg-white/5 px-1.5 py-0.5 rounded transition-all"
+              title="Copy full output text"
+            >
+              {copiedText ? (
+                <>
+                  <Check size={8} className="text-emerald-400" />
+                  <span className="text-emerald-400">Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy size={8} />
+                  <span>Copy</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* error message for failed nodes */}
+      {result.status === 'failed' && result.error && (
+        <div className="px-2.5 pb-2">
+          <div className="flex items-start gap-1.5 text-[9px] text-rose-400/80 bg-rose-500/5 rounded-md p-1.5 border border-rose-500/10">
+            <AlertCircle size={9} className="shrink-0 mt-0.5" />
+            <span className="break-words min-w-0">{result.error}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // status pill indicator - shows running/success/failed with color coding
 // displays as a small dot when sidebar is collapsed
