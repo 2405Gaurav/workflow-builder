@@ -1,18 +1,22 @@
 'use client';
 
-import { useCallback, useRef, DragEvent } from 'react';
+import { useCallback, useRef, useState, DragEvent } from 'react';
 import {
   ReactFlow,
   Background,
   ConnectionMode,
   useReactFlow,
+  useViewport,
   ConnectionLineType,
   Panel,
   MiniMap,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { motion } from 'framer-motion';
-import { Plus, MousePointer2, Hand, Scissors, Link2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ZoomIn, ZoomOut, Maximize2, Lock, Unlock, 
+  Minus, RotateCcw, Grid3X3,
+} from 'lucide-react';
 
 import { useWorkflowStore } from '@/lib/store';
 import { TextNode } from './nodes/TextNode';
@@ -49,7 +53,9 @@ const connectionLineStyle = {
 
 export function WorkflowCanvas() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView, zoomIn, zoomOut, setViewport } = useReactFlow();
+  const { zoom } = useViewport();
+  const [isLocked, setIsLocked] = useState(false);
   
   const {
     nodes,
@@ -91,6 +97,30 @@ export function WorkflowCanvas() {
     addNode({ id, type, position, data } as WorkflowNode);
   }, [screenToFlowPosition, addNode]);
 
+  // fit view handler — centers and scales to show all nodes with some padding
+  const handleFitView = useCallback(() => {
+    fitView({ padding: 0.3, duration: 600 });
+  }, [fitView]);
+
+  // zoom handlers with smooth animation
+  const handleZoomIn = useCallback(() => {
+    zoomIn({ duration: 300 });
+  }, [zoomIn]);
+
+  const handleZoomOut = useCallback(() => {
+    zoomOut({ duration: 300 });
+  }, [zoomOut]);
+
+  // reset viewport to default center position
+  const handleResetView = useCallback(() => {
+    setViewport({ x: 0, y: 0, zoom: 1 }, { duration: 500 });
+  }, [setViewport]);
+
+  // toggle lock - prevents panning and zooming when locked
+  const handleToggleLock = useCallback(() => {
+    setIsLocked(prev => !prev);
+  }, []);
+
   return (
     <div ref={reactFlowWrapper} className="w-full h-full bg-[#050505] relative">
       <ReactFlow
@@ -111,6 +141,11 @@ export function WorkflowCanvas() {
         snapToGrid
         snapGrid={[12, 12]}
         proOptions={{ hideAttribution: true }}
+        panOnDrag={!isLocked}
+        zoomOnScroll={!isLocked}
+        zoomOnPinch={!isLocked}
+        zoomOnDoubleClick={!isLocked}
+        nodesDraggable={!isLocked}
       >
         <Background
           variant={"dots" as any}
@@ -123,10 +158,10 @@ export function WorkflowCanvas() {
         <MiniMap 
           className="!bg-[#080808]/80 backdrop-blur-xl !rounded-2xl border border-white/5 shadow-2xl transition-all duration-300"
           style={{ 
-            right: 300, 
+            right: 260, 
             bottom: 24, 
-            width: 200, 
-            height: 120,
+            width: 180, 
+            height: 110,
             zIndex: 40 
           }}
           nodeColor={(n) => {
@@ -140,20 +175,83 @@ export function WorkflowCanvas() {
           position="bottom-right"
         />
 
+        {/* Canvas Controls Toolbar — bottom center */}
         <Panel position="bottom-center" className="mb-6">
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="flex items-center gap-1 p-1.5 bg-[#111]/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl"
+            transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="flex items-center gap-0.5 p-1.5 bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.04)]"
           >
-            <IconButton icon={Plus} />
-            <div className="w-px h-4 bg-white/10 mx-1" />
-            <IconButton icon={MousePointer2} active />
-            <IconButton icon={Hand} />
-            <IconButton icon={Scissors} />
-            <IconButton icon={Link2} />
+            {/* Fit View — the star of the show */}
+            <CanvasButton 
+              icon={Maximize2} 
+              onClick={handleFitView}
+              tooltip="Fit to view"
+              accent
+            />
+
+            <div className="w-px h-5 bg-white/[0.06] mx-1" />
+
+            {/* Zoom controls */}
+            <CanvasButton 
+              icon={ZoomOut} 
+              onClick={handleZoomOut}
+              tooltip="Zoom out"
+            />
+            
+            {/* Zoom level display */}
+            <button
+              onClick={handleResetView}
+              className="min-w-[48px] h-8 px-2 rounded-lg text-[10px] font-bold text-white/40 hover:text-white/70 hover:bg-white/[0.04] transition-all mono tracking-tight"
+              title="Reset to 100%"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+
+            <CanvasButton 
+              icon={ZoomIn} 
+              onClick={handleZoomIn}
+              tooltip="Zoom in"
+            />
+
+            <div className="w-px h-5 bg-white/[0.06] mx-1" />
+
+            {/* Reset view */}
+            <CanvasButton 
+              icon={RotateCcw} 
+              onClick={handleResetView}
+              tooltip="Reset viewport"
+            />
+
+            {/* Lock/unlock interaction */}
+            <CanvasButton 
+              icon={isLocked ? Lock : Unlock} 
+              onClick={handleToggleLock}
+              tooltip={isLocked ? 'Unlock canvas' : 'Lock canvas'}
+              active={isLocked}
+              danger={isLocked}
+            />
           </motion.div>
         </Panel>
+
+        {/* Lock indicator overlay */}
+        <AnimatePresence>
+          {isLocked && (
+            <Panel position="top-center" className="mt-20">
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full"
+              >
+                <Lock size={10} className="text-amber-400" />
+                <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">Canvas Locked</span>
+              </motion.div>
+            </Panel>
+          )}
+        </AnimatePresence>
       </ReactFlow>
 
       <style jsx global>{`
@@ -220,10 +318,39 @@ export function WorkflowCanvas() {
   );
 }
 
-function IconButton({ icon: Icon, active = false }: { icon: any, active?: boolean }) {
+// Reusable canvas toolbar button with hover/active states and optional accent coloring
+function CanvasButton({ 
+  icon: Icon, 
+  onClick, 
+  tooltip, 
+  active = false,
+  accent = false,
+  danger = false,
+}: { 
+  icon: any; 
+  onClick: () => void; 
+  tooltip: string;
+  active?: boolean;
+  accent?: boolean;
+  danger?: boolean;
+}) {
   return (
-    <button className={`p-2.5 rounded-xl transition-all hover:bg-white/5 ${active ? 'bg-white/10 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]' : 'text-white/30'}`}>
-      <Icon size={18} strokeWidth={active ? 2.5 : 2} />
-    </button>
+    <motion.button
+      whileTap={{ scale: 0.9 }}
+      onClick={onClick}
+      title={tooltip}
+      className={`
+        w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200
+        ${accent 
+          ? 'text-white/60 hover:text-white hover:bg-white/10 hover:shadow-[0_0_12px_rgba(255,255,255,0.06)]' 
+          : danger && active
+          ? 'text-amber-400 bg-amber-500/10 hover:bg-amber-500/15'
+          : active 
+          ? 'text-white bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]' 
+          : 'text-white/30 hover:text-white/60 hover:bg-white/[0.04]'}
+      `}
+    >
+      <Icon size={15} strokeWidth={active || accent ? 2.2 : 1.8} />
+    </motion.button>
   );
 }
