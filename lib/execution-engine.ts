@@ -297,13 +297,16 @@ export class ExecutionEngine {
   }
 
   // Step 1: Trigger the task, get runId back
+  const extractPayload: any = { videoUrl };
+  if (node.data.timestampMode === 'percentage') {
+    extractPayload.percentage = node.data.percentage ?? 0;
+  } else {
+    extractPayload.timestamp = node.data.timestamp ?? 0;
+  }
   const response = await fetch('/api/execute/extract-frame', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      videoUrl,
-      timestamp: node.data.timestamp ?? 0,
-    }),
+    body: JSON.stringify(extractPayload),
   });
 
   if (!response.ok) {

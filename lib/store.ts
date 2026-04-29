@@ -106,9 +106,15 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
     try {
       // 2. Start the task (returns immediately with runId)
+      const payload: any = { videoUrl };
+      if (node.data.timestampMode === 'percentage') {
+        payload.percentage = node.data.percentage ?? 0;
+      } else {
+        payload.timestamp = node.data.timestamp ?? 0;
+      }
       const response = await fetch('/api/execute/extract-frame', {
         method: 'POST',
-        body: JSON.stringify({ videoUrl, timestamp: node.data.timestamp }),
+        body: JSON.stringify(payload),
       });
       
       const { runId, error } = await response.json();

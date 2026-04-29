@@ -68,6 +68,8 @@ export interface ExtractFrameNodeData extends BaseNodeData {
   outputType: 'image';
   videoUrl?: string;
   timestamp: number;
+  percentage?: number;
+  timestampMode?: 'seconds' | 'percentage';
   extractedFrameUrl?: string;
 }
 

@@ -16,16 +16,17 @@ export async function GET(req: NextRequest) {
         userId,
         ...(workflowId ? { workflowId } : {}),
       },
-      // ✅ Only select metadata fields
+      // Select all fields needed for the history sidebar, including nodeResults
       select: {
         id: true,
         workflowId: true,
         status: true,
         scope: true,
         startedAt: true,
+        completedAt: true,
         durationMs: true,
         errorMessage: true,
-        // nodeResults is NOT selected here
+        nodeResults: true,
       },
       orderBy: { startedAt: 'desc' },
       take: 20, 

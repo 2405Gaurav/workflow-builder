@@ -4,7 +4,7 @@ import { memo, useState } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { ExtractFrameNodeData } from '@/lib/types';
 import { useWorkflowStore } from '@/lib/store';
-import { X, Clock, Scissors, AlertCircle, ExternalLink, Copy, Check } from 'lucide-react';
+import { X, Clock, Scissors, AlertCircle, ExternalLink, Copy, Check, Percent } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import { Play } from 'lucide-react';
@@ -144,19 +144,82 @@ export const ExtractFrameNode = memo(({ id, data }: NodeProps<Node<ExtractFrameN
     {videoConnected ? 'VIDEO INPUT CONNECTED' : 'NO VIDEO SOURCE'}
   </div>
 
-  <div className="space-y-1.5">
-    <div className="flex items-center gap-1.5 text-white/50">
+  {/* Mode toggle: Seconds vs Percentage */}
+  <div className="flex rounded-lg overflow-hidden border border-white/10">
+    <button
+      onClick={() => updateNodeData(id, { timestampMode: 'seconds' })}
+      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all ${
+        (data.timestampMode || 'seconds') === 'seconds'
+          ? 'bg-yellow-500/15 text-yellow-400 border-r border-yellow-500/30'
+          : 'bg-white/[0.02] text-white/30 hover:text-white/50 border-r border-white/10'
+      }`}
+    >
       <Clock size={10} />
-      <label className="text-[9px] uppercase font-bold">Time Offset (Sec)</label>
-    </div>
-    <Input
-      type="number"
-      step="0.1"
-      value={data.timestamp || 0}
-      onChange={(e) => updateNodeData(id, { timestamp: Number(e.target.value) })}
-      className="h-8 bg-[#0d0d0d] border-white/5 text-white text-[11px] px-2 focus:border-yellow-500/50 focus:ring-0 rounded-md shadow-inner"
-    />
+      Seconds
+    </button>
+    <button
+      onClick={() => updateNodeData(id, { timestampMode: 'percentage' })}
+      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all ${
+        data.timestampMode === 'percentage'
+          ? 'bg-yellow-500/15 text-yellow-400'
+          : 'bg-white/[0.02] text-white/30 hover:text-white/50'
+      }`}
+    >
+      <Percent size={10} />
+      Percentage
+    </button>
   </div>
+
+  {/* Seconds input */}
+  {(data.timestampMode || 'seconds') === 'seconds' && (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-1.5 text-white/50">
+        <Clock size={10} />
+        <label className="text-[9px] uppercase font-bold">Time Offset (Sec)</label>
+      </div>
+      <Input
+        type="number"
+        step="0.1"
+        value={data.timestamp || 0}
+        onChange={(e) => updateNodeData(id, { timestamp: Number(e.target.value) })}
+        className="h-8 bg-[#0d0d0d] border-white/5 text-white text-[11px] px-2 focus:border-yellow-500/50 focus:ring-0 rounded-md shadow-inner"
+      />
+    </div>
+  )}
+
+  {/* Percentage input */}
+  {data.timestampMode === 'percentage' && (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-white/50">
+        <div className="flex items-center gap-1.5">
+          <Percent size={10} />
+          <label className="text-[9px] uppercase font-bold">Position (%)</label>
+        </div>
+        <span className="text-[10px] font-mono text-yellow-400/70">{data.percentage ?? 0}%</span>
+      </div>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value={data.percentage ?? 0}
+        onChange={(e) => updateNodeData(id, { percentage: Number(e.target.value) })}
+        className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+        style={{
+          background: `linear-gradient(to right, rgba(234,179,8,0.5) 0%, rgba(234,179,8,0.5) ${data.percentage ?? 0}%, rgba(255,255,255,0.08) ${data.percentage ?? 0}%, rgba(255,255,255,0.08) 100%)`,
+        }}
+      />
+      <Input
+        type="number"
+        min="0"
+        max="100"
+        step="1"
+        value={data.percentage ?? 0}
+        onChange={(e) => updateNodeData(id, { percentage: Math.min(100, Math.max(0, Number(e.target.value))) })}
+        className="h-8 bg-[#0d0d0d] border-white/5 text-white text-[11px] px-2 focus:border-yellow-500/50 focus:ring-0 rounded-md shadow-inner"
+      />
+    </div>
+  )}
 
   {/* 👇 Run button */}
   <button

@@ -168,13 +168,11 @@ export const cropImageTask = task({
 
 export const extractFrameTask = task({
   id: "extract-frame",
-  run: async (payload: { videoUrl: string; timestamp?: any }) => {
+  run: async (payload: { videoUrl: string; timestamp?: any; percentage?: number }) => {
     const ffmpeg = (await import("fluent-ffmpeg")).default;
     const fs = await import("fs/promises");
     const path = await import("path");
     const os = await import("os");
-
-    const seekTime = parseFloat(String(payload.timestamp || 0));
 
     const runId = Math.random().toString(36).substring(7);
     const tempDir = path.join(os.tmpdir(), `extract-${runId}`);
@@ -189,8 +187,22 @@ export const extractFrameTask = task({
         throw new Error(`Failed to fetch video: ${videoResponse.statusText}`);
       }
       const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
-      // await fs.writeFile(videoPath, videoBuffer);
          await fs.writeFile(videoPath, new Uint8Array(videoBuffer));
+
+      // Compute seek time: either directly from timestamp or from percentage of duration
+      let seekTime: number;
+      if (payload.percentage !== undefined && payload.percentage !== null) {
+        // Probe the video to get its duration, then compute seek from percentage
+        const duration = await new Promise<number>((resolve, reject) => {
+          ffmpeg.ffprobe(videoPath, (err: any, metadata: any) => {
+            if (err) reject(new Error(`ffprobe failed: ${err.message}`));
+            else resolve(metadata.format.duration || 0);
+          });
+        });
+        seekTime = (payload.percentage / 100) * duration;
+      } else {
+        seekTime = parseFloat(String(payload.timestamp || 0));
+      }
 
       await new Promise<void>((resolve, reject) => {
         ffmpeg(videoPath)
@@ -217,4 +229,4 @@ export const extractFrameTask = task({
       await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
     }
   },
-});
+});

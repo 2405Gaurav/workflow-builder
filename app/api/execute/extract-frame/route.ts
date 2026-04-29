@@ -185,13 +185,18 @@ export async function POST(req: NextRequest) {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { videoUrl, timestamp } = await req.json();
+    const { videoUrl, timestamp, percentage } = await req.json();
+
+    // Build payload — send percentage if provided, otherwise timestamp
+    const taskPayload: any = { videoUrl };
+    if (percentage !== undefined && percentage !== null) {
+      taskPayload.percentage = percentage;
+    } else {
+      taskPayload.timestamp = timestamp ?? 0;
+    }
 
     // Trigger and RETURN IMMEDIATELY
-    const run = await tasks.trigger("extract-frame", {
-      videoUrl,
-      timestamp: timestamp ?? 0,
-    });
+    const run = await tasks.trigger("extract-frame", taskPayload);
 
     return NextResponse.json({ runId: run.id }); // No loop here!
 
