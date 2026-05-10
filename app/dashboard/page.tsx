@@ -4,7 +4,7 @@
 // this is the main hub after loggin in, kinda like a home base
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';// the primary tool for programmatic navigation and accessing route information within Client Components
 import { useUser, UserButton } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
@@ -84,7 +84,7 @@ export default function DashboardPage() {
           setWorkflows(data || []);
         }
       } catch (err) {
-        // somthing went wrong but we dont wana crash the whole page
+        // somthing went wrong but letss not crash the whole page
         console.error('Failed to fetch worflows:', err);
       } finally {
         setIsLoading(false);
@@ -126,6 +126,9 @@ export default function DashboardPage() {
   // navigate to a blank canvas for new worflow
   const handleNewWorkflow = () => {
     router.push('/workflow');
+     //router.push('/workflow');router.push is a method for programmatic, client-side navigation in frameworks like Next.js and Vue Router. 
+    //It adds a new entry to the browser's history stack,
+    //allowing users to navigate to a new URL without a full page reload, typically used after actions like form submissions
   };
 
   // figure out how many nodes a workflow has for the card preview
@@ -436,7 +439,7 @@ export default function DashboardPage() {
                     {/* delete button - only shows on hover */}
                     <button
                       onClick={(e) => handleDelete(e, wf.id)}
-                      disabled={deletingId === wf.id}
+                      disabled={deletingId === wf.id}  // Disable button IF: currently deleting THIS workflow
                       className="opacity-0 group-hover:opacity-100 p-2 text-white/15 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all duration-200"
                     >
                       {deletingId === wf.id ? (

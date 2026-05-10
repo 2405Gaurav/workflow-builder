@@ -12,7 +12,7 @@ export function ImportExportButtons() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
+    const reader = new FileReader();//builtin web api for reading files
     reader.onload = (event) => {
       const result = importWorkflow(event.target?.result as string);
       if (!result.success) alert(result.error);

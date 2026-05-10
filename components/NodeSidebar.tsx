@@ -6,10 +6,10 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserButton, useUser } from '@clerk/nextjs';
 import Image from 'next/image';
-import { 
-  FileText, ImageIcon, Video, Brain, 
-  Crop, Film, LayoutGrid, Home, Plus, 
-  Search, X, PanelLeftClose, PanelLeftOpen 
+import {
+  FileText, ImageIcon, Video, Brain,
+  Crop, Film, LayoutGrid, Home,
+  Search, X, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 
 import { useWorkflowStore } from '@/lib/store';
@@ -26,14 +26,14 @@ const nodeConfigs = [
 
 function NodeSearch({ query, setQuery }: { query: string; setQuery: (val: string) => void }) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       className="relative px-2 mb-4"
     >
       <div className="relative group">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-white/50 transition-colors" size={14} />
-        <input 
+        <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -41,7 +41,7 @@ function NodeSearch({ query, setQuery }: { query: string; setQuery: (val: string
           className="w-full h-9 bg-white/[0.03] border border-white/5 rounded-xl pl-9 pr-8 text-[12px] text-white placeholder:text-white/20 focus:outline-none focus:border-white/20 transition-all"
         />
         {query && (
-          <button 
+          <button
             onClick={() => setQuery('')}
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-md transition-colors"
           >
@@ -57,15 +57,16 @@ export function NodeSidebar() {
   const addNode = useWorkflowStore((state) => state.addNode);
   const { user } = useUser();
   const pathname = usePathname();
-  
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredNodes = useMemo(() => {
-    return nodeConfigs.filter(n => 
-      n.label.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    return nodeConfigs.filter(n =>
+      n.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
       n.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    );//here we are using the usememo to memoize the filtered nodes
+    //we wnat that it only runs when the searchquery changes not anything else 
   }, [searchQuery]);
 
   const handleDragStart = useCallback((event: DragEvent, type: NodeDataType, outputType: string) => {
@@ -100,7 +101,7 @@ export function NodeSidebar() {
         <div className={`flex items-center justify-between px-1 pt-1 pb-1 shrink-0 ${isCollapsed ? 'flex-col gap-4' : ''}`}>
           <AnimatePresence mode="wait">
             {!isCollapsed && (
-              <motion.div 
+              <motion.div
                 key="logo"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -111,8 +112,8 @@ export function NodeSidebar() {
               </motion.div>
             )}
           </AnimatePresence>
-          
-          <button 
+
+          <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="p-2 text-white/20 hover:text-white hover:bg-white/5 rounded-xl transition-all"
           >

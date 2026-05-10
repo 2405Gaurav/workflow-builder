@@ -1,6 +1,11 @@
 import { WorkflowNode, WorkflowEdge, NodeExecutionResult, ExecutionScope } from './types';
-import { validateDAG, topologicalSort, getDependencies, getConnectedInputs } from './validation';
+import { validateDAG, getConnectedInputs } from './validation';
 
+
+// what runs first what runs parallel what waits
+//as nodes such as image crop and frame extr can be done parallely but llm nodes need to run sequentially,
+//  and if an llm node is connected to an image crop node,
+//  the crop needs to finish before the llm starts so it can use the cropped image as context 
 type StatusCallback = (nodeId: string, status: NodeExecutionResult['status'], data?: Record<string, any>) => void;
 
 export class ExecutionEngine {
@@ -77,6 +82,9 @@ export class ExecutionEngine {
 
   /**
    * Parallel execution using Kahn's algorithm.
+   * Kahn's algorithm is a popular method for performing topological sorting on a Directed Acyclic Graph (DAG). 
+   * It is an iterative, breadth-first search (BFS) based approach 
+   * that relies on tracking the in-degree of each node—meaning the number of incoming edges pointing to it.
    * Nodes with 0 in-degree run simultaneously.
    * When a node completes, we decrement in-degrees and launch newly ready nodes.
    */

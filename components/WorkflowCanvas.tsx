@@ -1,21 +1,34 @@
 'use client';
+// 1. Rendering the DAG canvas
+// 2. Managing node/edge interactions
+// 3. Handling drag-drop
+// 4. Validating graph connections
+// 5. Managing viewport controls
+// 6. Connecting React Flow with Zustand
+// 7. Providing execution-ready graph state
+
 
 import { useCallback, useRef, useState, DragEvent } from 'react';
+//usecallback -> Prevents unnecessary recreation during rerenders.and its Critical because ReactFlow rerenders frequently.
+//useref -> used to store DOM reference and it Reference to canvas container DOM.
+//dragevent-> TypeScript type for drag/drop events.
 import {
   ReactFlow,
   Background,
   ConnectionMode,
   useReactFlow,
   useViewport,
-  ConnectionLineType,
+  ConnectionLineType,   //Temporary line shown while dragging connection.
   Panel,
   MiniMap,
 } from '@xyflow/react';
+// This library is your graph rendering engine.
+// xyflow: Node-Based UIs for React and Svelte
 import '@xyflow/react/dist/style.css';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';//animate presence used for exit animation when a element is removed from teh react
 import { 
   ZoomIn, ZoomOut, Maximize2, Lock, Unlock, 
-  Minus, RotateCcw, Grid3X3,
+  RotateCcw 
 } from 'lucide-react';
 
 import { useWorkflowStore } from '@/lib/store';
@@ -34,7 +47,7 @@ const nodeTypes = {
   'llm': LLMNode,
   'crop-image': CropImageNode,
   'extract-frame': ExtractFrameNode,
-};
+};//mapps the node to the actual react component ,the reactflow sees nodetypes['llm'] and renders the <LLMNode />
 
 const defaultEdgeOptions = {
   type: 'default', 
@@ -52,8 +65,10 @@ const connectionLineStyle = {
 };
 
 export function WorkflowCanvas() {
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { screenToFlowPosition, fitView, zoomIn, zoomOut, setViewport } = useReactFlow();
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);//Stores actual canvas DOM element.
+  const { screenToFlowPosition, fitView, zoomIn, zoomOut, setViewport } = useReactFlow();//This gives imperative control over canvas.
+  //screenToFlowPosition -> Converts mouse screen coordinates into graph coordinates.
+  // fitView -> Auto centers all nodes.
   const { zoom } = useViewport();
   const [isLocked, setIsLocked] = useState(false);
   
