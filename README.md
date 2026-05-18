@@ -1,6 +1,6 @@
 # NextFlow — LLM Workflow Builder
 
-> A production-grade visual workflow builder for creating and executing complex LLM pipelines, inspired by [Krea.ai](https://krea.ai).
+> A production-grade visual workflow builder for creating and executing complex LLM pipelines.
 
 Built by [Gaurav Thakur](https://thegauravthakur.in) · [GitHub](https://github.com/2405Gaurav)
 
