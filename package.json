@@ -69,6 +69,7 @@
     "lucide-react": "^0.446.0",
     "next": "^16.2.1",
     "next-themes": "^0.3.0",
+    "nodemailer": "^8.0.10",
     "postcss": "8.4.30",
     "prisma": "^7.5.0",
     "react": "^18.3.1",
@@ -89,6 +90,7 @@
   "devDependencies": {
     "@trigger.dev/build": "4.4.3",
     "@types/fluent-ffmpeg": "^2.1.28",
+    "@types/nodemailer": "^8.0.0",
     "dotenv": "^17.3.1",
     "typescript": "^5.9.3"
   }
