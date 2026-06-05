@@ -70,6 +70,8 @@ export default function DashboardPage() {
   const [workflows, setWorkflows] = useState<WorkflowItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // DB-01: track which workflow is pending delete confirmation
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // fetch all saved worflows when user is loaded
   useEffect(() => {
@@ -94,29 +96,34 @@ export default function DashboardPage() {
     fetchWorkflows();
   }, [isLoaded, user]);
 
-  // delete a workflow - asks the backend to remove it
-  const handleDelete = async (e: React.MouseEvent, workflowId: string) => {
-    // stop the click from bubbling up to the card click handler
+  // DB-01: clicking trash just opens the confirm dialog, doesnt delete yet
+  const handleDelete = (e: React.MouseEvent, workflowId: string) => {
     e.stopPropagation();
+    setConfirmDeleteId(workflowId);
+  };
 
-    if (deletingId) return; // already deleteing somthing, chill out
-    setDeletingId(workflowId);
+  // DB-01: user confirmed — now actually delete from the db
+  const confirmDelete = async () => {
+    if (!confirmDeleteId || deletingId) return;
+    setDeletingId(confirmDeleteId);
 
     try {
-      const res = await fetch(`/api/workflows/${workflowId}`, {
+      const res = await fetch(`/api/workflows/${confirmDeleteId}`, {
         method: 'DELETE',
       });
-
       if (res.ok) {
-        // remove from local state so we dont need to refetch
-        setWorkflows((prev) => prev.filter((w) => w.id !== workflowId));
+        setWorkflows((prev) => prev.filter((w) => w.id !== confirmDeleteId));
       }
     } catch (err) {
       console.error('Delete failed:', err);
     } finally {
       setDeletingId(null);
+      setConfirmDeleteId(null);
     }
   };
+
+  // DB-01: user cancelled — close dialog, template stays untouched
+  const cancelDelete = () => setConfirmDeleteId(null);
 
   // open an exisitng workflow in the editor
   const handleOpenWorkflow = (workflowId: string) => {
@@ -486,6 +493,53 @@ export default function DashboardPage() {
             </AnimatePresence>
           </motion.div>
         )}
+
+        {/* DB-01: delete confirmation modal */}
+        <AnimatePresence>
+          {confirmDeleteId && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60"
+              onClick={cancelDelete}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 10 }}
+                transition={{ duration: 0.2 }}
+                className="w-[360px] bg-[#0a0a0a] border border-white/[0.06] rounded-2xl p-6 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/15 flex items-center justify-center mb-4">
+                  <Trash2 size={18} className="text-rose-400/80" />
+                </div>
+                <h3 className="text-sm font-bold text-white/80 mb-1">Delete Workflow?</h3>
+                <p className="text-xs text-white/30 mb-5">This will permanently remove the workflow. This can't be undone.</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={cancelDelete}
+                    className="flex-1 py-2 text-[11px] text-white/40 hover:text-white/60 rounded-lg border border-white/[0.06] hover:border-white/[0.1] transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    disabled={deletingId === confirmDeleteId}
+                    className="flex-1 py-2 text-[11px] font-medium text-rose-400 bg-rose-500/10 hover:bg-rose-500/15 rounded-lg border border-rose-500/15 transition-all disabled:opacity-50"
+                  >
+                    {deletingId === confirmDeleteId ? (
+                      <Loader2 size={13} className="animate-spin mx-auto" />
+                    ) : (
+                      'Delete'
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* footer - same as landing page to keep things consistant */}
