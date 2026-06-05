@@ -279,6 +279,11 @@ export function WorkflowToolbar() {
                   placeholder="Workflow Name"
                   value={workflowName}
                   onChange={(e) => setWorkflowName(e.target.value)}
+                  // BUG-02: Enter saves, Escape cancels
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && workflowName) handleSave();
+                    if (e.key === 'Escape') setSaveDialogOpen(false);
+                  }}
                   className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
                 />
               </div>
