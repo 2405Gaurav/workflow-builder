@@ -1,6 +1,7 @@
 import { SignIn } from '@clerk/nextjs';
-import {  Zap, Brain, GitBranch } from 'lucide-react';
+import {  Zap, Brain, GitBranch, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function SignInPage() {
   return (
@@ -77,6 +78,13 @@ export default function SignInPage() {
       <div className="flex w-full md:w-1/2 items-center justify-center px-6 bg-[#0a0a0f]">
 
         <div className="w-full max-w-md">
+            <Link
+    href="/"
+    className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-6"
+  >
+    <ArrowLeft size={14} />
+    Back to home
+  </Link>
 
        <div className="flex items-center gap-2 ">
          <Image
