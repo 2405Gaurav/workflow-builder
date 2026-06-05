@@ -35,6 +35,7 @@ export const LLMNode = memo(({ id, data }: NodeProps<Node<LLMNodeData>>) => {
     // quick + pragmatic: find the first http(s) URL in the output text
     // (covers blob urls, signed urls, and normal links)
     const match = data.result.match(/https?:\/\/[^\s)]+/i);
+    //we are here using the usememo the regex matching operation does not run on every render unnecessarily
     return match?.[0] ?? null;
   }, [data.result]);
 

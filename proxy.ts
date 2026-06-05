@@ -20,3 +20,8 @@ export const config = {
     '/(api|trpc)(.*)',
   ],
 };
+
+
+// The alternative is using Clerk webhooks — Clerk fires a user.created event to your server the moment someone signs up,
+//  and you store them in your DB immediately. This is the more robust approach,
+//  especially if you need to store user-level data (preferences, plan type, etc.) before they do anything.

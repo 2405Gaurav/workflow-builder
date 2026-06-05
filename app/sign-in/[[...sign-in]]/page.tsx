@@ -16,6 +16,7 @@ export default function SignInPage() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-blue-600/10 blur-[80px] pointer-events-none" />
 
         <div className="relative z-10 max-w-md px-10">
+          {/* //a folder wrapped in double square brackets like [[...sign-in]] represents an Optional Catch-All Route. */}
 
           {/* Icon */}
           <div className="flex mb-6">
@@ -28,7 +29,7 @@ export default function SignInPage() {
           <h2 className="text-3xl font-bold text-white leading-tight mb-4">
             Oh, you&apos;re back. <br />
             <span className="text-blue-400">Ready to build again?</span>
-          </h2>
+          </h2> 
 
           <p className="text-zinc-400 text-sm leading-relaxed mb-10">
             Your workflows are right where you left them. Sign in and pick up
@@ -58,9 +59,9 @@ export default function SignInPage() {
 
             <div className="flex items-center gap-3 bg-white/[0.04] border border-white/[0.07] rounded-lg px-4 py-3 text-sm text-zinc-300">
               <GitBranch size={14} className="text-emerald-400 shrink-0" />
-              <span>Assignment</span>
+              <span></span>
               <span className="text-zinc-600 mx-1">→</span>
-              <span className="text-zinc-400">galaxy.ai &gt;</span>
+              <span className="text-zinc-400"> &gt;</span>
             </div>
 
           </div>

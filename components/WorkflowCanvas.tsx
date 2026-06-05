@@ -83,6 +83,7 @@ export function WorkflowCanvas() {
 
   // connection guard so you cant wire up random stuff and then wonder why it broke later
   const isValidConnection = useCallback((connection: any) => {
+    // React will reuse the same function instance between renders unless dependencies change.
     const source = nodes.find(n => n.id === connection.source);
     const target = nodes.find(n => n.id === connection.target);
     if (!source || !target || source.id === target.id) return false;

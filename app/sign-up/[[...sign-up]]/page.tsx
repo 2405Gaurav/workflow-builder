@@ -56,9 +56,9 @@ export default function SignUpPage() {
 
             <div className="flex items-center gap-3 bg-white/[0.04] border border-white/[0.07] rounded-lg px-4 py-3 text-sm text-zinc-300">
               <GitBranch size={14} className="text-emerald-400 shrink-0" />
-              <span>Assignment</span>
+              <span></span>
               <span className="text-zinc-600 mx-1">→</span>
-              <span className="text-zinc-400">galaxy.ai &gt;</span>
+              <span className="text-zinc-400"> &gt;</span>
             </div>
 
           </div>

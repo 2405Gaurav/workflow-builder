@@ -24,7 +24,7 @@ const staggerContainer = {
 
 export default function LandingPage() {
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn } = useAuth();// The useAuth() hook provides access to the current user's authentication state and methods to manage the active session
   const { scrollYProgress } = useScroll();
   
   // Enhanced scroll parallax effects - makes the hero feel alive
