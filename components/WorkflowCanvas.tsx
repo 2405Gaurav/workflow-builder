@@ -71,6 +71,10 @@ export function WorkflowCanvas() {
   // fitView -> Auto centers all nodes.
   const { zoom } = useViewport();
   const [isLocked, setIsLocked] = useState(false);
+  // Tooltip state for edge hover — tracks position + visibility
+  const [edgeTooltip, setEdgeTooltip] = useState<{ x: number; y: number; visible: boolean }>({
+    x: 0, y: 0, visible: false,
+  });
   
   const {
     nodes,
@@ -137,6 +141,51 @@ export function WorkflowCanvas() {
     setIsLocked(prev => !prev);
   }, []);
 
+  // BUG-01: Double-click an edge to remove it.
+  // Why onEdgeDoubleClick instead of a context menu or delete key?
+  //  - Edges are thin and hard to select, so a right-click menu adds friction.
+  //  - Double-click is fast, discoverable, and doesn't need a confirmation
+  //    dialog because re-connecting is trivial (just drag a new wire).
+  // We reuse the existing onEdgesChange action with a "remove" change so
+  // the deletion flows through the same pipeline as keyboard deletes.
+  const handleEdgeDoubleClick = useCallback(
+    (_event: React.MouseEvent, edge: { id: string }) => {
+      onEdgesChange([{ id: edge.id, type: 'remove' }]);
+      // persist to history so ctrl-z can undo the removal
+      useWorkflowStore.getState().saveToHistory();
+      // hide tooltip immediately after removing the edge
+      setEdgeTooltip(prev => ({ ...prev, visible: false }));
+    },
+    [onEdgesChange]
+  );
+
+  // Show tooltip when mouse enters an edge
+  const handleEdgeMouseEnter = useCallback((_event: React.MouseEvent) => {
+    const rect = reactFlowWrapper.current?.getBoundingClientRect();
+    if (!rect) return;
+    setEdgeTooltip({
+      x: _event.clientX - rect.left,
+      y: _event.clientY - rect.top,
+      visible: true,
+    });
+  }, []);
+
+  // Track mouse so tooltip follows cursor across the edge
+  const handleEdgeMouseMove = useCallback((_event: React.MouseEvent) => {
+    const rect = reactFlowWrapper.current?.getBoundingClientRect();
+    if (!rect) return;
+    setEdgeTooltip({
+      x: _event.clientX - rect.left,
+      y: _event.clientY - rect.top,
+      visible: true,
+    });
+  }, []);
+
+  // Hide tooltip when mouse leaves the edge
+  const handleEdgeMouseLeave = useCallback(() => {
+    setEdgeTooltip(prev => ({ ...prev, visible: false }));
+  }, []);
+
   return (
     <div ref={reactFlowWrapper} className="w-full h-full bg-[#050505] relative">
       <ReactFlow
@@ -145,6 +194,10 @@ export function WorkflowCanvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onEdgeDoubleClick={handleEdgeDoubleClick}
+        onEdgeMouseEnter={handleEdgeMouseEnter}
+        onEdgeMouseMove={handleEdgeMouseMove}
+        onEdgeMouseLeave={handleEdgeMouseLeave}
         onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
         onDrop={onDrop}
         nodeTypes={nodeTypes}
@@ -160,7 +213,7 @@ export function WorkflowCanvas() {
         panOnDrag={!isLocked}
         zoomOnScroll={!isLocked}
         zoomOnPinch={!isLocked}
-        zoomOnDoubleClick={!isLocked}
+        zoomOnDoubleClick={false}
         nodesDraggable={!isLocked}
       >
         <Background
@@ -270,6 +323,27 @@ export function WorkflowCanvas() {
         </AnimatePresence>
       </ReactFlow>
 
+      {/* Edge hover tooltip — positioned relative to the canvas wrapper */}
+      <AnimatePresence>
+        {edgeTooltip.visible && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.12 }}
+            className="absolute pointer-events-none z-50 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a]/95 backdrop-blur-sm border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+            style={{
+              left: edgeTooltip.x + 12,
+              top: edgeTooltip.y - 32,
+            }}
+          >
+            <span className="text-[10px] font-medium text-white/70 whitespace-nowrap">
+              Double-click to remove
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <style jsx global>{`
         /* HANDLES */
         .react-flow__handle {
@@ -291,6 +365,16 @@ export function WorkflowCanvas() {
           stroke-dasharray: 8;
           stroke-dashoffset: 16;
           animation: flow 1.2s linear infinite;
+        }
+
+        /* BUG-01: visual hint that edges are interactive (double-click to remove) */
+        .react-flow__edge {
+          cursor: pointer;
+        }
+        .react-flow__edge:hover .react-flow__edge-path {
+          stroke: rgba(239, 68, 68, 0.5);
+          filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.3));
+          transition: stroke 0.15s ease, filter 0.15s ease;
         }
 
         @keyframes flow {
