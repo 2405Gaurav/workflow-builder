@@ -107,14 +107,14 @@ export default function LandingPage() {
         <div className="absolute inset-0 grid-bg" />
       </motion.div>
 
-      <main className="relative z-10 pt-28 pb-20 px-6 max-w-7xl mx-auto">
+      <main className="relative z-10 pt-20 sm:pt-28 pb-20 px-4 sm:px-6 max-w-7xl mx-auto">
 
         {/* ── HERO SECTION ── */}
         <motion.section
           initial="initial"
           animate="animate"
           variants={staggerContainer}
-          className="relative mb-28"
+          className="relative mb-16 sm:mb-28"
         >
           <motion.div style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}>
             <motion.div
@@ -123,7 +123,7 @@ export default function LandingPage() {
                 animate: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' },
               }}
               transition={{ duration: 1.2, ease:[0.16, 1, 0.3, 1] }}
-              className="w-full aspect-[21/9] md:aspect-[21/8] rounded-[36px] md:rounded-[48px] flex flex-col items-center justify-center text-center px-6 overflow-hidden relative hero-gradient"
+              className="w-full aspect-[4/3] sm:aspect-[21/9] md:aspect-[21/8] rounded-[24px] sm:rounded-[36px] md:rounded-[48px] flex flex-col items-center justify-center text-center px-4 sm:px-6 overflow-hidden relative hero-gradient"
               style={{
                 boxShadow: '0 40px 120px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
               }}
@@ -146,7 +146,7 @@ export default function LandingPage() {
                   animate: { opacity: 1, y: 0 },
                 }}
                 transition={{ duration: 1, delay: 0.3, ease:[0.16, 1, 0.3, 1] }}
-                className="text-5xl md:text-[80px] font-extrabold tracking-tighter leading-[0.92] mb-10 z-10 text-white"
+                className="text-3xl sm:text-5xl md:text-[80px] font-extrabold tracking-tighter leading-[0.92] mb-6 sm:mb-10 z-10 text-white"
                 style={{ textShadow: '0 2px 40px rgba(0,0,0,0.4)' }}
               >
                 Build your next<br />AI workflow.
@@ -163,7 +163,7 @@ export default function LandingPage() {
               >
                 <button
                   onClick={handleCTAClick}
-                  className="bg-white text-black px-10 py-3.5 rounded-full font-bold text-[15px] hover:bg-white/90 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-2xl shadow-black/40"
+                  className="bg-white text-black px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-full font-bold text-[13px] sm:text-[15px] hover:bg-white/90 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-2xl shadow-black/40"
                 >
                   {isSignedIn ? 'Go to Dashboard' : 'Get Started Free'}
                 </button>
@@ -175,7 +175,7 @@ export default function LandingPage() {
           <motion.div
             variants={fadeInUp}
             transition={{ duration: 0.8, delay: 0.6, ease:[0.16, 1, 0.3, 1] }}
-            className="mt-8 flex justify-center items-center gap-6 text-white/25 mono text-[10px] tracking-widest uppercase"
+            className="mt-6 sm:mt-8 flex flex-wrap justify-center items-center gap-3 sm:gap-6 text-white/25 mono text-[9px] sm:text-[10px] tracking-widest uppercase"
           >
             <span>Start Building for free</span>
             <div className="w-1 h-1 bg-white/20 rounded-full" />
@@ -191,7 +191,7 @@ export default function LandingPage() {
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, margin: '-80px' }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-36"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-20 sm:mb-36"
         >
           {[
             { val: '6',   label: 'Core Nodes' },
@@ -205,7 +205,7 @@ export default function LandingPage() {
               transition={{ duration: 0.5 }}
               className="border-l border-white/8 pl-6"
             >
-              <div className="text-4xl font-bold tracking-tighter mb-1 text-white">{s.val}</div>
+              <div className="text-2xl sm:text-4xl font-bold tracking-tighter mb-1 text-white">{s.val}</div>
               <div className="mono text-[10px] text-white/30 uppercase tracking-widest">{s.label}</div>
             </motion.div>
           ))}
@@ -219,7 +219,7 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7, ease:[0.22, 1, 0.36, 1] }}
-              className="text-4xl md:text-6xl font-bold tracking-tighter leading-none"
+              className="text-2xl sm:text-4xl md:text-6xl font-bold tracking-tighter leading-none"
             >
               Powerful logic.<br />Simple interface.
             </motion.h2>
@@ -254,7 +254,7 @@ export default function LandingPage() {
                 variants={fadeInUp}
                 transition={{ duration: 0.5 }}
                 whileHover={{ y: -4 }}
-                className="p-9 rounded-[28px] border border-white/5 transition-colors duration-300 group cursor-default"
+                className="p-6 sm:p-9 rounded-[20px] sm:rounded-[28px] border border-white/5 transition-colors duration-300 group cursor-default"
                 style={{ background: 'rgba(255,255,255,0.02)' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}

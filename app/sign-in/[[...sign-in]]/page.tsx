@@ -75,30 +75,31 @@ export default function SignInPage() {
       </div>
 
       {/* RIGHT SIDE — Auth */}
-      <div className="flex w-full md:w-1/2 items-center justify-center px-6 bg-[#0a0a0f]">
+      <div className="flex w-full md:w-1/2 items-center justify-center px-6 py-12 bg-[#0a0a0f] relative">
+
+        {/* back link — pinned top-left of this panel */}
+        <Link
+          href="/"
+          className="absolute top-6 left-8 inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+        >
+          <ArrowLeft size={14} />
+          Back to home
+        </Link>
 
         <div className="w-full max-w-md">
-            <Link
-    href="/"
-    className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-6"
-  >
-    <ArrowLeft size={14} />
-    Back to home
-  </Link>
-
-       <div className="flex items-center gap-2 ">
-         <Image
-           src="/logo.png"
-           alt="NextFlow"
-           width={180}
-           height={60}
-           className="object-contain"
-           style={{ filter: 'brightness(1.2)' }}
-         />
-       </div>
+          <div className="flex items-center gap-2 mb-4">
+            <Image
+              src="/logo.png"
+              alt="NextFlow"
+              width={180}
+              height={60}
+              className="object-contain"
+              style={{ filter: 'brightness(1.2)' }}
+            />
+          </div>
 
           <SignIn
-           forceRedirectUrl="/dashboard"
+            forceRedirectUrl="/dashboard"
             appearance={{
               variables: {
                 colorBackground: '#111118',
@@ -128,7 +129,6 @@ export default function SignInPage() {
               },
             }}
           />
-
         </div>
       </div>
     </div>

@@ -21,7 +21,7 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
   // ── LANDING NAV ─────────────────────────────────────────────────────────────
   return (
     <nav
-      className="fixed top-0 w-full z-50 flex items-center justify-between px-8 md:px-16 h-16"
+      className="fixed top-0 w-full z-50 flex items-center justify-between px-4 sm:px-8 md:px-16 h-14 sm:h-16"
       style={{
         background: 'transparent',
         backdropFilter: 'none',
@@ -29,19 +29,19 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
       }}
     >
       {/* Logo — no background, blends into dark page */}
-      <Link href="/" className="flex items-center gap-3">
+      <Link href="/" className="flex items-center gap-3 shrink-0">
         <Image
           src="/logo.png"
           alt="NextFlow"
-          width={160}
-          height={52}
-          className="object-contain opacity-90 hover:opacity-100 transition-opacity duration-300"
+          width={120}
+          height={40}
+          className="object-contain opacity-90 hover:opacity-100 transition-opacity duration-300 sm:w-[160px]"
           style={{ filter: 'brightness(1.1) drop-shadow(0 0 12px rgba(255,255,255,0.08))' }}
         />
       </Link>
 
       {/* auth btns - show sign in/up when loged out, dashbaord link when loged in */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         {isLoaded && !isSignedIn && (
           <>
             <Link
@@ -56,7 +56,7 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
 
             <Link
               href="/sign-up"
-              className="text-[13px] font-semibold tracking-wide px-5 py-2 rounded-full transition-all duration-200"
+              className="text-[11px] sm:text-[13px] font-semibold tracking-wide px-3 sm:px-5 py-1.5 sm:py-2 rounded-full transition-all duration-200"
               style={{
                 background: 'rgba(255,255,255,0.08)',
                 border: '1px solid rgba(255,255,255,0.12)',

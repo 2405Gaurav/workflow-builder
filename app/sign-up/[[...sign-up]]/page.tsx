@@ -124,20 +124,21 @@ export default function SignUpPage() {
       </div>
 
       {/* RIGHT SIDE — either email gate or Clerk signup */}
-      <div className="flex w-full md:w-1/2 items-center justify-center px-6 bg-[#0a0a0f]">
+      <div className="flex w-full md:w-1/2 items-center justify-center px-6 py-12 bg-[#0a0a0f] relative overflow-y-auto max-h-screen">
+
+        {/* back link — pinned top-left of this panel */}
+        <Link
+          href="/"
+          className="absolute top-6 left-8 inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 transition-colors z-10"
+        >
+          <ArrowLeft size={14} />
+          Back to home
+        </Link>
+
         <div className="w-full max-w-md">
 
-          {/* Back to home — FE-01, already present */}
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-6"
-          >
-            <ArrowLeft size={14} />
-            Back to home
-          </Link>
-
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-4">
             <Image
               src="/logo.png"
               alt="NextFlow"
@@ -150,7 +151,7 @@ export default function SignUpPage() {
 
           {/* ---- STEP 1: Email gate (shown before Clerk) ---- */}
           {!showClerk && (
-            <div className="mt-6 p-6 rounded-2xl border border-white/[0.08] bg-[#111118]">
+            <div className="mt-4 p-6 rounded-2xl border border-white/[0.08] bg-[#111118]">
 
               <h3 className="text-zinc-100 text-xl font-semibold mb-1">
                 Create your account
@@ -209,7 +210,7 @@ export default function SignUpPage() {
             <SignUp
               forceRedirectUrl="/dashboard"
               initialValues={{
-                // pre-fill the email the user already typed so they don't have to re-enter it
+                // pre-fill the email so they don't have to re-enter it
                 emailAddress: email,
               }}
               appearance={{
