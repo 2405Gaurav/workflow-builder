@@ -1,42 +1,66 @@
 'use client';
 
-// landing page - the first thing ppl see when they open the app
-// tryin to make it look premium with smooth animations and clean typography
-// signed in users get redirected to dashboard instead of workflow directyl
-
+import { useState, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
-import { motion, useScroll, useTransform } from 'framer-motion';
+// Added 'animate', 'useInView', 'useMotionValue', 'useSpring', 'useTransform'
+import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, animate } from 'framer-motion';
 import { Globe } from 'lucide-react';
 
-// basic fade-in-up animation variant, used evrywhere
+// --- NEW COMPONENT FOR SMOOTH COUNTING ---
+function Counter({ value, direction = "up" }: { value: number, direction?: "up" | "down" }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  const motionValue = useMotionValue(0);
+  // useSpring makes the counting feel "organic" rather than robotic
+  const springValue = useSpring(motionValue, {
+    stiffness: 60,   // Lower = slower/softer
+    damping: 20,    // Higher = less oscillation
+  });
+  const displayValue = useTransform(springValue, (latest) => Math.round(latest));
+  const [displayText, setDisplayText] = useState(0);
+
+  useEffect(() => {
+    if (isInView) {
+      // Delay slightly to align with the section's fade-in
+      setTimeout(() => {
+        animate(motionValue, value, { duration: 2, ease: "easeOut" });
+      }, 500);
+    }
+  }, [isInView, value, motionValue]);
+
+  // Sync displayValue to local state for rendering
+  useEffect(() => {
+    return displayValue.on("change", (latest) => {
+      setDisplayText(latest);
+    });
+  }, [displayValue]);
+
+  return <span ref={ref}>{displayText}</span>;
+}
+
 const fadeInUp = {
   initial: { opacity: 0, y: 24 },
   animate: { opacity: 1, y: 0 },
 };
 
-// stagger children for that cascading entrance effect
 const staggerContainer = {
   animate: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } }
 };
 
 export default function LandingPage() {
   const router = useRouter();
-  const { isSignedIn } = useAuth();// The useAuth() hook provides access to the current user's authentication state and methods to manage the active session
+  const { isSignedIn } = useAuth();
   const { scrollYProgress } = useScroll();
   
-  // Enhanced scroll parallax effects - makes the hero feel alive
   const heroOpacity = useTransform(scrollYProgress,[0, 0.25], [1, 0]);
   const heroScale = useTransform(scrollYProgress,[0, 0.25], [1, 0.92]);
   const heroY = useTransform(scrollYProgress, [0, 0.25], [0, 60]);
-  
-  // background parallax - subtle but noticable
   const bgY = useTransform(scrollYProgress, [0, 1],['0%', '25%']);
 
-  // if user is signed in, send them to dashboard first
-  // otherwise just open the workflow builder as a guest preview kinda thing
   const handleCTAClick = () => {
     if (isSignedIn) {
       router.push('/dashboard');
@@ -59,15 +83,9 @@ export default function LandingPage() {
         }
 
         @keyframes gradientShift {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
 
         .hero-gradient {
@@ -92,7 +110,6 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* page entrance - that satisfying wipe-up reveal */}
       <motion.div
         className="fixed inset-0 z-[100] bg-[#050505] pointer-events-none"
         initial={{ y: 0 }}
@@ -100,7 +117,6 @@ export default function LandingPage() {
         transition={{ duration: 1.2, ease: [0.85, 0, 0.15, 1], delay: 0.1 }}
       />
 
-      {/* BACKGROUND WITH PARALLAX - subtle moving blobs */}
       <motion.div style={{ y: bgY }} className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-15%] left-[-5%] w-[45%] h-[45%] bg-purple-700/5 blur-[140px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-700/5 blur-[140px] rounded-full" />
@@ -108,8 +124,6 @@ export default function LandingPage() {
       </motion.div>
 
       <main className="relative z-10 pt-20 sm:pt-28 pb-20 px-4 sm:px-6 max-w-7xl mx-auto">
-
-        {/* ── HERO SECTION ── */}
         <motion.section
           initial="initial"
           animate="animate"
@@ -128,7 +142,6 @@ export default function LandingPage() {
                 boxShadow: '0 40px 120px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
               }}
             >
-              {/* noise texture overlay - adds that film grain feel */}
               <div
                 className="absolute inset-0 opacity-[0.04] pointer-events-none"
                 style={{
@@ -136,10 +149,8 @@ export default function LandingPage() {
                   backgroundSize: '200px 200px',
                 }}
               />
-              {/* Bottom dark fade - helps the text pop against background */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-              {/* Headline */}
               <motion.h1
                 variants={{
                   initial: { opacity: 0, y: 30 },
@@ -152,7 +163,6 @@ export default function LandingPage() {
                 Build your next<br />AI workflow.
               </motion.h1>
 
-              {/* main CTA - routes to dashboard if signed in, sign-up if not */}
               <motion.div
                 variants={{
                   initial: { opacity: 0, y: 20 },
@@ -171,7 +181,6 @@ export default function LandingPage() {
             </motion.div>
           </motion.div>
 
-          {/* tagline strip below hero */}
           <motion.div
             variants={fadeInUp}
             transition={{ duration: 0.8, delay: 0.6, ease:[0.16, 1, 0.3, 1] }}
@@ -185,7 +194,7 @@ export default function LandingPage() {
           </motion.div>
         </motion.section>
 
-        {/* ── STATS SECTION ── */}
+        {/* ── UPDATED STATS SECTION ── */}
         <motion.section
           variants={staggerContainer}
           initial="initial"
@@ -194,7 +203,7 @@ export default function LandingPage() {
           className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-20 sm:mb-36"
         >
           {[
-            { val: '6',   label: 'Core Nodes' },
+            { val: <Counter value={10} />, label: 'Core Nodes' },
             { val: '2.0', label: 'Gemini Flash' },
             { val: '∞',   label: 'Pipelines' },
             { val: '0ms', label: 'Latency' },
@@ -205,13 +214,17 @@ export default function LandingPage() {
               transition={{ duration: 0.5 }}
               className="border-l border-white/8 pl-6"
             >
-              <div className="text-2xl sm:text-4xl font-bold tracking-tighter mb-1 text-white">{s.val}</div>
-              <div className="mono text-[10px] text-white/30 uppercase tracking-widest">{s.label}</div>
+              <div className="text-2xl sm:text-4xl font-bold tracking-tighter mb-1 text-white">
+                {s.val}
+              </div>
+              <div className="mono text-[10px] text-white/30 uppercase tracking-widest">
+                {s.label}
+              </div>
             </motion.div>
           ))}
         </motion.section>
 
-        {/* ── FEATURES SECTION ── */}
+        {/* ... Rest of the component remains the same ... */}
         <section className="mb-10">
           <div className="flex flex-col md:flex-row justify-between items-end mb-14 gap-6">
             <motion.h2
@@ -267,10 +280,8 @@ export default function LandingPage() {
             ))}
           </motion.div>
         </section>
-
       </main>
 
-      {/* ── FOOTER ── */}
       <motion.footer
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -282,7 +293,6 @@ export default function LandingPage() {
           <span className="mono text-[10px] text-white/20 uppercase tracking-widest">
             {`© ${new Date().getFullYear()} NextFlow — LLM Workflow Builder`}
           </span>
-
           <Link
             href="https://thegauravthakur.in"
             target="_blank"
@@ -296,7 +306,6 @@ export default function LandingPage() {
           </Link>
         </div>
       </motion.footer>
-    
     </div>
   );
 }
